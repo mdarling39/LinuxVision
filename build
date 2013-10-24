@@ -1,0 +1,20 @@
+#!/bin/bash
+
+FLAGS="";
+
+if [ "$#" == 0 ]; then
+	echo "Regular code"
+
+elif [ $1 == "profile" ]; then
+	FLAGS="$FLAGS -pg ";
+	echo "Profiling code"
+elif [ $1 == "optimize" ]; then
+	FLAGS="$FLAGS -O3 ";
+	echo "Optimized code"
+else
+	echo "Regular code"
+fi
+
+g++ ${FLAGS}  CompleteVision_MAIN.cpp BBBSerial.cpp CamObj.cpp FPSCounter.cpp\
+ KalmanFilter.cpp OCVCapture.cpp PnPObj.cpp  Threshold.cpp customblobdetector.cpp\
+ v4l2Cap.cpp -o main `pkg-config --cflags --libs opencv libv4l2`

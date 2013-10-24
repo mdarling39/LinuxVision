@@ -1,0 +1,222 @@
+# depslib dependency file v1.0
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/BBBSerial.cpp
+	"BBBSerial.h"
+	<iostream>
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/BBBSerial.h
+	<stdio.h>
+	<string.h>
+	<fcntl.h>
+	<errno.h>
+	<termios.h>
+	<unistd.h>
+	<assert.h>
+	<time.h>
+	<vector>
+
+1381788218 source:/home/mdarling/Desktop/CompleteVision_MAIN/CamObj.cpp
+	"CamObj.hpp"
+
+1382562762 /home/mdarling/Desktop/CompleteVision_MAIN/CamObj.hpp
+	<iostream>
+	<opencv2/core/core.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/imgproc/imgproc.hpp>
+	<opencv2/video/video.hpp>
+	"v4l2Cap.h"
+
+1382413341 /home/mdarling/Desktop/CompleteVision_MAIN/v4l2Cap.h
+	<stdio.h>
+	<stdlib.h>
+	<signal.h>
+	<string.h>
+	<assert.h>
+	<getopt.h>
+	<fcntl.h>
+	<unistd.h>
+	<errno.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<sys/time.h>
+	<sys/mman.h>
+	<sys/ioctl.h>
+	<time.h>
+	<iostream>
+	<linux/videodev2.h>
+	"opencv2/core/core_c.h"
+	"opencv2/highgui/highgui_c.h"
+	"opencv2/opencv.hpp"
+
+1381796523 source:/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN.cpp
+	<iostream>
+	<iterator>
+	"Global.hpp"
+	"Config.hpp"
+	"CamObj.hpp"
+	"FPSCounter.hpp"
+	"Threshold.hpp"
+	"PnPObj.hpp"
+	"BBBSerial.h"
+	<stdio.h>
+	<sys/types.h>
+	<sys/stat.h>
+
+1381793207 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
+
+1381787308 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/FPSCounter.hpp
+	<sys/time.h>
+	<stddef.h>
+	<iostream>
+	"Global.hpp"
+
+1381792267 /home/mdarling/Desktop/CompleteVision_MAIN/Threshold.hpp
+	<iostream>
+	<opencv2/core/core.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/imgproc/imgproc.hpp>
+	<opencv2/objdetect/objdetect.hpp>
+	<opencv2/features2d/features2d.hpp>
+	"Global.hpp"
+	"customblobdetector.hpp"
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/customblobdetector.hpp
+	"cvconfig.h"
+	<opencv2/features2d/features2d.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/imgproc/imgproc.hpp>
+	<opencv2/imgproc/imgproc_c.h>
+	<opencv2/core/internal.hpp>
+	<opencv2/flann/miniflann.hpp>
+	<algorithm>
+	"Global.hpp"
+	<stdio.h>
+	"opencv2/features2d/features2d_tegra.hpp"
+	<limits>
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/PnPObj.hpp
+	<iostream>
+	<string>
+	<algorithm>
+	<numeric>
+	<fstream>
+	<vector>
+	<opencv2/core/core.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/imgproc/imgproc.hpp>
+	<opencv2/features2d/features2d.hpp>
+	<opencv2/calib3d/calib3d.hpp>
+	"Global.hpp"
+
+1382414236 source:/home/mdarling/Desktop/CompleteVision_MAIN/customblobdetector.cpp
+	"customblobdetector.hpp"
+	<iterator>
+	<iostream>
+	"opencv2/opencv_modules.hpp"
+	"opencv2/highgui/highgui.hpp"
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/FPSCounter.cpp
+	"FPSCounter.hpp"
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/KalmanFilter.cpp
+	"KalmanFilter.hpp"
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/KalmanFilter.hpp
+	<opencv2/core/core.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/features2d/features2d.hpp>
+	<math.h>
+	"Global.hpp"
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/OCVCapture.cpp
+	"OCVCapture.h"
+	"opencv2/imgproc/imgproc.hpp"
+	"opencv2/highgui/highgui.hpp"
+	<iostream>
+	<iomanip>
+	<fcntl.h>
+	<linux/videodev2.h>
+	<libv4l2.h>
+	<errno.h>
+	<sys/mman.h>
+
+1381786430 /home/mdarling/Desktop/CompleteVision_MAIN/OCVCapture.h
+	<opencv2/core/core.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<vector>
+	<string>
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/PnPObj.cpp
+	"PnPObj.hpp"
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/serialCommBeagle.cpp
+	<stdio.h>
+	<string.h>
+	<fcntl.h>
+	<errno.h>
+	<termios.h>
+	<unistd.h>
+
+1381792239 source:/home/mdarling/Desktop/CompleteVision_MAIN/Threshold.cpp
+	"Threshold.hpp"
+
+1382580009 source:/home/mdarling/Desktop/CompleteVision_MAIN/v4l2Cap.cpp
+	"v4l2Cap.h"
+
+1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/v4l2Cap_example.cpp
+	<iostream>
+	<opencv2/opencv.hpp>
+	"v4l2Cap.h"
+	"OCVCapture.h"
+
+1381786555 source:/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN/main.cpp
+	<iostream>
+
+1381796394 source:/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN_ORIG.cpp
+	<iostream>
+	<iterator>
+	"Global.hpp"
+	"Config.hpp"
+	"CamObj.hpp"
+	"FPSCounter.hpp"
+	"Threshold.hpp"
+	"PnPObj.hpp"
+	"BBBSerial.h"
+	<stdio.h>
+	<sys/types.h>
+	<sys/stat.h>
+
+1382478716 source:/home/mdarling/Desktop/CompleteVision_MAIN/main.cpp
+	"CamObj.hpp"
+	"FPSCounter.hpp"
+	"ProfilerTool.h"
+	"morph.hpp"
+	<opencv2/opencv.hpp>
+	<vector>
+	<bitset>
+	<iostream>
+
+1381788218 /home/mdarling/Desktop/CompleteVision_MAIN/CamObj.cpp
+	"CamObj.hpp"
+
+1381894081 /home/mdarling/Desktop/CompleteVision_MAIN/ProfilerTool.h
+	<ctime>
+
+1382401224 /home/mdarling/Desktop/CompleteVision_MAIN/neon_instructions.h
+	<arm_neon.h>
+
+1382401196 /home/mdarling/Desktop/CompleteVision_MAIN/morph.hpp
+	<opencv2/opencv.hpp>
+	"neon_instructions.h"
+
+1382579645 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+	"CamObj.hpp"
+	"FPSCounter.hpp"
+	"ProfilerTool.h"
+	"morph.hpp"
+	<opencv2/opencv.hpp>
+	<vector>
+	<iostream>
+	<pthread.h>
+
