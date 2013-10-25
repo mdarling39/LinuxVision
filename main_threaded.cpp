@@ -88,7 +88,7 @@ int main()
 
 
         imshow("gray",gray);
-        waitKey(0);
+        waitKey(1);
         continue;
 
 
