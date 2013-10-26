@@ -15,10 +15,12 @@
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="`pkg-config --cflags --libs opencv libv4l2`" />
+					<Add option="-pthread" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
 					<Add option="`pkg-config --cflags --libs opencv libv4l2`" />
+					<Add option="-pthread" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -63,6 +65,7 @@
 		<Unit filename="../neon_instructions.h" />
 		<Unit filename="../v4l2Cap.cpp" />
 		<Unit filename="../v4l2Cap.h" />
+		<Unit filename="../v4l2_c.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

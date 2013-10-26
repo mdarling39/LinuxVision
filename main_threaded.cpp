@@ -34,6 +34,7 @@ Mat frame = imread("/home/mdarling/Desktop/CompleteVision_MAIN/SampleImage.jpeg"
 Mat gray(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 Mat binary(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 
+
 vector<vector<Point> > contours;
 vector<Vec4i> hierarchy;
 
@@ -42,15 +43,38 @@ time_t time_tic,time_toc;
 double time_tot = 0;
 FPSCounter fps(15);
 
-
-void* capture();
 void custom_v4l2_init(void*);
+
+/// Multithreading variables
+void* capture(void*);
+void* processing(void*);
+pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
+pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
+
+// enum type to protect access to the the "frame" cv::Mat object
+enum access_t {
+    READING,
+    WRITING,
+    FREE
+};
+access_t frameAccess = READING;
 
 int main()
 {
+    // Initialize pthreads
+    pthread_t capture_thread;
+    pthread_t processing_thread;
 
-    /// Capture function
+    pthread_create(&capture_thread,NULL,capture,NULL);
+    pthread_create(&processing_thread,NULL,processing,NULL);
 
+    pthread_join(capture_thread,NULL); // Let the capture thread end the program
+    return 0;
+}
+
+void *capture(void*)
+{
     // Configure camera properties
     struct v4l2Parms parms;
     v4l2_set_defalut_parms(&parms);
@@ -78,25 +102,74 @@ int main()
 
         // The following three v4l2_ commands replace v4l2_grab_frame(&parms, frame);
         v4l2_fill_buffer(&parms, &buf, &buff_ptr); // dequeue buffer
-
+        pthread_mutex_lock(&framelock_mutex);
+        if (frameAccess == READING)
+            pthread_cond_wait(&done_using_frame,&framelock_mutex);
         v4l2_process_image(frame, buff_ptr); /// THIS FUNCTION WRITES TO FRAME AND MUST BE PROTECTED!!!
+        frameAccess = FREE;
+        pthread_cond_broadcast(&done_saving_frame);
+        pthread_mutex_unlock(&framelock_mutex);
 
         v4l2_queue_buffer(&parms, &buf);
-
-        /// Processing
-        const int mixCh[]= {2,0};
-        mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
-        /// End of Processing
-
-        imshow("gray",gray);
-        waitKey(1);
     }
 
     v4l2_stop_capturing(&parms);
     v4l2_uninit_device(&parms);
     v4l2_close_device(&parms);
 
-    /// End of Capture function
+    pthread_exit(NULL);
+}
+
+void *processing(void*)
+{
+while(1)
+{
+    /// After this, we are working with the gray image
+    pthread_mutex_lock(&framelock_mutex);
+    if (frameAccess == WRITING)
+        pthread_cond_wait(&done_saving_frame,&framelock_mutex);
+    const int mixCh[]= {2,0};
+    mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
+    gray = gray.clone(); // force a hard copy (This might be a little bit expensive)
+                         // consider implementing a circular image buffer to skip this step
+    frameAccess = FREE;
+    pthread_cond_broadcast(&done_using_frame);
+    pthread_mutex_unlock(&framelock_mutex);
+
+    const cv::Mat kernel(30,30,CV_8UC1,Scalar(255));
+    threshold(gray,binary,215,255,THRESH_BINARY);
+    dilate(binary,binary,kernel);
+
+
+    imshow("drawing",binary);
+    waitKey(1);
+
+}
+pthread_exit(NULL);
+}
+
+void custom_v4l2_init(void* parm_void)
+{
+#define V4L2_CID_C920_ZOOMVAL    0x9A090D  //Zoom           (wide=0, telephoto=500)
+#define V4L2_CID_C920_AUTOFOCUS  0x9A090C  //Autofocus      (0=OFF, 1 = ON)
+#define V4L2_CID_C920_FOCUSVAL   0X9A090A  //Focus Value    (min=0, max=250)
+#define V4L2_C920_FOCUS_INF      0
+#define V4L2_C920_FOCUS_MACRO    250
+
+    struct v4l2Parms* parm = (struct v4l2Parms*) parm_void;
+
+    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);    // Turn autofocus off
+    set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
+    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
+    //set_parm(parm->fd, V4L2_CID_SATURATION,128);      // Adjust Saturation (0-255)
+    set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
+
+}
+
+
+
+
+
 
 
 //    CamObj cap;
@@ -166,29 +239,5 @@ int main()
 //        waitKey(1);
 //    }
 
-    return 0;
-}
-
-
-void* capture()
-{
-
-}
-
-void custom_v4l2_init(void* parm_void)
-{
-#define V4L2_CID_C920_ZOOMVAL    0x9A090D  //Zoom           (wide=0, telephoto=500)
-#define V4L2_CID_C920_AUTOFOCUS  0x9A090C  //Autofocus      (0=OFF, 1 = ON)
-#define V4L2_CID_C920_FOCUSVAL   0X9A090A  //Focus Value    (min=0, max=250)
-#define V4L2_C920_FOCUS_INF      0
-#define V4L2_C920_FOCUS_MACRO    250
-
-struct v4l2Parms* parm = (struct v4l2Parms*) parm_void;
-
-    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);    // Turn autofocus off
-    set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
-    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
-    //set_parm(parm->fd, V4L2_CID_SATURATION,128);      // Adjust Saturation (0-255)
-    set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
-
-}
+//    return 0;
+//}
