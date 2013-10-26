@@ -1,4 +1,6 @@
-#include "CamObj.hpp"
+//#include "CamObj.hpp"
+#include "v4l2_c.h"
+
 #include "FPSCounter.hpp"
 #include "ProfilerTool.h"
 #include "morph.hpp"
@@ -26,9 +28,6 @@ const unsigned char THRESHOLD_MAXVAL = 255;
 
 #if LIVE_CAPTURE
 Mat frame(Size(IM_WIDTH,IM_HEIGHT),CV_8UC3);
-//Mat frame0(IM_HEIGHT,IM_WIDTH,CV_8UC3);
-//Mat frame1(IM_HEIGHT,IM_WIDTH,CV_8UC3);
-//Mat frames[] = {frame0, frame1};
 #else
 Mat frame = imread("/home/mdarling/Desktop/CompleteVision_MAIN/SampleImage.jpeg",CV_LOAD_IMAGE_COLOR);
 #endif
@@ -43,80 +42,153 @@ time_t time_tic,time_toc;
 double time_tot = 0;
 FPSCounter fps(15);
 
+
+void* capture();
+void custom_v4l2_init(void*);
+
 int main()
 {
-    CamObj cap;
 
-    // open the camera
-    cap.set_image_size(IM_WIDTH,IM_HEIGHT);
-    cap.set_framerate(30);
-    cap.open(DEVICE);
+    /// Capture function
 
-    vector<KeyPoint> keypoints;
-    vector<Vec4i> hierarchy;
-    vector<Vec3f> circles;
+    // Configure camera properties
+    struct v4l2Parms parms;
+    v4l2_set_defalut_parms(&parms);
+    strcpy(parms.dev_name,"/dev/video1");
+    parms.width = 640;
+    parms.height = 480;
+    parms.fps = 30;
+    parms.timeout = 1;
+    parms.customInitFcn = &custom_v4l2_init;
 
-    int prof_i=0;
-    for (int iter=0; iter<2500; iter++)
+    // Open + initialize the camera for capturing
+    v4l2_open_device(&parms);
+    v4l2_init_device(&parms);
+    v4l2_start_capturing(&parms);
+
+    //  Capture frames
+    for (int iters=0; iters<100; iters++)
     {
-        if (prof_i++ == 150)
-        {
-            printf ("\nCapture time: %f milliseconds,time.\n",(float)time_tot * 1000.0);
-            printf ("TimerA took: %d clicks (%f milliseconds).\n",(int)timerA.n_clocks(),timerA.ms());
-            printf ("TimerB took: %d clicks (%f milliseconds).\n",(int)timerB.n_clocks(),timerB.ms());
-            return 0;
-        }
 
-        // capture an image
-        time(&time_tic);
-#if LIVE_CAPTURE
-        cap >> frame;
-#else
-        resize(frame,frame,Size(IM_WIDTH,IM_HEIGHT));
-#endif
+        if ( 0 != v4l2_wait_for_data(&parms))   // calls select()
+            continue;
 
-        time(&time_toc);
-        time_tot += difftime(time_toc,time_tic);
+        struct v4l2_buffer buf;
+        void* buff_ptr;
 
-        double fps_cnt=fps.fps();
-        if ((iter%15) == 0)
-            cout << "\r" "FPS: " << fps_cnt << flush;
+        // The following three v4l2_ commands replace v4l2_grab_frame(&parms, frame);
+        v4l2_fill_buffer(&parms, &buf, &buff_ptr); // dequeue buffer
 
-        timerA.tic();
+        v4l2_process_image(frame, buff_ptr); /// THIS FUNCTION WRITES TO FRAME AND MUST BE PROTECTED!!!
+
+        v4l2_queue_buffer(&parms, &buf);
+
+        /// Processing
         const int mixCh[]= {2,0};
         mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
-
+        /// End of Processing
 
         imshow("gray",gray);
         waitKey(1);
-        continue;
-
-
-
-
-
-
-
-
-
-
-        threshold(gray,binary,THRESHOLD,255,THRESH_BINARY);  // OpenCV is faster at thresholding too
-
-        timerB.tic();
-        findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
-        timerB.toc();
-        timerA.toc();
-
-
-        /// Draw the contours image
-        Mat drawing = Mat::zeros(480,640,CV_8UC1);
-        for (int i=0; i<contours.size(); i++)
-        {
-            drawContours(drawing,contours,i,Scalar(255));
-        }
-        imshow("window",drawing);
-        waitKey(1);
     }
 
+    v4l2_stop_capturing(&parms);
+    v4l2_uninit_device(&parms);
+    v4l2_close_device(&parms);
+
+    /// End of Capture function
+
+
+//    CamObj cap;
+//
+//    // open the camera
+//    cap.set_image_size(IM_WIDTH,IM_HEIGHT);
+//    cap.set_framerate(30);
+//    cap.open(DEVICE);
+//
+//    vector<KeyPoint> keypoints;
+//    vector<Vec4i> hierarchy;
+//    vector<Vec3f> circles;
+//
+//    int prof_i=0;
+//    for (int iter=0; iter<2500; iter++)
+//    {
+//        if (prof_i++ == 150)
+//        {
+//            printf ("\nCapture time: %f milliseconds,time.\n",(float)time_tot * 1000.0);
+//            printf ("TimerA took: %d clicks (%f milliseconds).\n",(int)timerA.n_clocks(),timerA.ms());
+//            printf ("TimerB took: %d clicks (%f milliseconds).\n",(int)timerB.n_clocks(),timerB.ms());
+//            return 0;
+//        }
+//
+//        // capture an image
+//        time(&time_tic);
+//#if LIVE_CAPTURE
+//        cap >> frame;
+//#else
+//        resize(frame,frame,Size(IM_WIDTH,IM_HEIGHT));
+//#endif
+//
+//        time(&time_toc);
+//        time_tot += difftime(time_toc,time_tic);
+//
+//        double fps_cnt=fps.fps();
+//        if ((iter%15) == 0)
+//            cout << "\r" "FPS: " << fps_cnt << flush;
+//
+//        timerA.tic();
+//        const int mixCh[]= {2,0};
+//        mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
+//
+//
+//        imshow("gray",gray);
+//        waitKey(1);
+//        continue;
+//
+//
+//
+//
+//        threshold(gray,binary,THRESHOLD,255,THRESH_BINARY);  // OpenCV is faster at thresholding too
+//
+//        timerB.tic();
+//        findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+//        timerB.toc();
+//        timerA.toc();
+//
+//
+//        /// Draw the contours image
+//        Mat drawing = Mat::zeros(480,640,CV_8UC1);
+//        for (int i=0; i<contours.size(); i++)
+//        {
+//            drawContours(drawing,contours,i,Scalar(255));
+//        }
+//        imshow("window",drawing);
+//        waitKey(1);
+//    }
+
     return 0;
+}
+
+
+void* capture()
+{
+
+}
+
+void custom_v4l2_init(void* parm_void)
+{
+#define V4L2_CID_C920_ZOOMVAL    0x9A090D  //Zoom           (wide=0, telephoto=500)
+#define V4L2_CID_C920_AUTOFOCUS  0x9A090C  //Autofocus      (0=OFF, 1 = ON)
+#define V4L2_CID_C920_FOCUSVAL   0X9A090A  //Focus Value    (min=0, max=250)
+#define V4L2_C920_FOCUS_INF      0
+#define V4L2_C920_FOCUS_MACRO    250
+
+struct v4l2Parms* parm = (struct v4l2Parms*) parm_void;
+
+    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);    // Turn autofocus off
+    set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
+    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
+    //set_parm(parm->fd, V4L2_CID_SATURATION,128);      // Adjust Saturation (0-255)
+    set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
+
 }
