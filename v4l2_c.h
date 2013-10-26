@@ -92,8 +92,6 @@ static void v4l2_process_image(cv::Mat &img, const void *p)
 static int v4l2_fill_buffer(struct v4l2Parms* parm, struct v4l2_buffer* buf, void **buffer_ptr)
 {
 
-    unsigned int i;
-
     CLEAR(*buf);
 
     buf->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -127,6 +125,7 @@ static int v4l2_queue_buffer(struct v4l2Parms* parm, struct v4l2_buffer* buf)
 {
     if (-1 == xioctl(parm->fd, VIDIOC_QBUF, buf))
         errno_exit("VIDIOC_QBUF");
+    return 0;
 }
 
 
