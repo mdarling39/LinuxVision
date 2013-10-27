@@ -49,26 +49,81 @@ void custom_v4l2_init(void*);
 void* capture(void*);
 void* processing(void*);
 pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t taketurns_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
-pthread_cond_t done_capturing = PTHREAD_COND_INITIALIZER;
-pthread_cond_t done_processing = PTHREAD_COND_INITIALIZER;
 
-int BUFF_FULL = 0;
-int DONE_PROCESSING = 1;
-int DONE_CAPTURING = 0;
+// enum type to protect access to the the "frame" cv::Mat object
+enum access_t {
+    READING,
+    WRITING,
+    FREE
+};
+access_t frameAccess = READING;
 
 int main()
 {
-    // Initialize pthreads
-    pthread_t capture_thread;
-    pthread_t processing_thread;
 
-    pthread_create(&capture_thread,NULL,capture,NULL);
-    pthread_create(&processing_thread,NULL,processing,NULL);
+// Configure camera properties
+    struct v4l2Parms parms;
+    v4l2_set_defalut_parms(&parms);
+    char devName[15];
+    sprintf(devName,"/dev/video%d",DEVICE);
+    strcpy(parms.dev_name,devName);
+    parms.width = 640;
+    parms.height = 480;
+    parms.fps = 30;
+    parms.timeout = 1;
+    parms.customInitFcn = &custom_v4l2_init;
 
-    pthread_join(capture_thread,NULL); // Let the capture thread end the program
+    // Open + initialize the camera for capturing
+    v4l2_open_device(&parms);
+    v4l2_init_device(&parms);
+    v4l2_start_capturing(&parms);
+
+
+    //  Capture frames
+    for (int iters=0; iters<500; iters++)
+    {
+        /// Capture
+
+        time(&time_tic);
+        int rval = v4l2_wait_for_data(&parms);  // calls select()
+        time(&time_toc);
+        time_tot += difftime(time_toc, time_tic);
+
+        if (0 != rval)
+            continue;
+
+        double fps_cnt=fps.fps();
+        cout << "\r" "FPS: " << fps_cnt << flush;
+
+        struct v4l2_buffer buf;
+        void* buff_ptr;
+
+        // The following three v4l2_ commands replace v4l2_grab_frame(&parms, frame);
+        v4l2_fill_buffer(&parms, &buf, &buff_ptr); // dequeue buffer
+        v4l2_process_image(frame, buff_ptr); /// THIS FUNCTION WRITES TO FRAME AND MUST BE PROTECTED!!!
+        v4l2_queue_buffer(&parms, &buf);
+
+        /// Process
+        timerA.tic();
+        const int mixCh[]= {2,0};
+        mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
+        //gray = gray.clone(); // force a hard copy (This might be a little bit expensive)
+        // consider implementing a circular image buffer to skip this step
+
+        timerB.tic();
+        threshold(gray,binary,215,255,THRESH_BINARY);
+        const cv::Mat kernel(3,3,CV_8UC1,Scalar(255));
+        dilate(binary,binary,kernel);
+        timerB.toc();
+        timerA.toc();
+    }
+
+    v4l2_stop_capturing(&parms);
+    v4l2_uninit_device(&parms);
+    v4l2_close_device(&parms);
+
 
     // report timings
     printf ("\nCapture time: %f milliseconds,time.\n",(float)time_tot * 1000.0);
@@ -102,7 +157,6 @@ void *capture(void*)
     for (int iters=0; iters<500; iters++)
     {
 
-        time(&time_tic);
         if ( 0 != v4l2_wait_for_data(&parms))   // calls select()
             continue;
 
@@ -111,34 +165,20 @@ void *capture(void*)
 
         // The following three v4l2_ commands replace v4l2_grab_frame(&parms, frame);
         v4l2_fill_buffer(&parms, &buf, &buff_ptr); // dequeue buffer
-
-        pthread_mutex_lock(&taketurns_mutex);
-        if ( DONE_PROCESSING < 1)
-            pthread_cond_wait(&done_processing,&taketurns_mutex);
-        pthread_mutex_unlock(&taketurns_mutex);
-
         pthread_mutex_lock(&framelock_mutex);
-        if (BUFF_FULL > 0)
+        if (frameAccess == READING)
             pthread_cond_wait(&done_using_frame,&framelock_mutex);
 
+        time(&time_tic);
         v4l2_process_image(frame, buff_ptr); /// THIS FUNCTION WRITES TO FRAME AND MUST BE PROTECTED!!!
         time(&time_toc);
         time_tot += difftime(time_toc, time_tic);
 
-        cout << "capture" << endl;
-        //double fps_cnt=fps.fps();
-        //cout << "\r" "FPS: " << fps_cnt << flush;
-
-        BUFF_FULL = 1;
+        frameAccess = FREE;
         pthread_cond_broadcast(&done_saving_frame);
         pthread_mutex_unlock(&framelock_mutex);
 
         v4l2_queue_buffer(&parms, &buf);
-
-        pthread_mutex_lock(&taketurns_mutex);
-        DONE_CAPTURING = 1; DONE_PROCESSING = 0;
-        pthread_cond_broadcast(&done_capturing);
-        pthread_mutex_unlock(&taketurns_mutex);
     }
 
     v4l2_stop_capturing(&parms);
@@ -152,15 +192,9 @@ void *processing(void*)
 {
 while(1)
 {
-    pthread_mutex_lock(&taketurns_mutex);
-    if (DONE_CAPTURING < 1)
-        pthread_cond_wait(&done_capturing,&taketurns_mutex);
-    pthread_mutex_unlock(&taketurns_mutex);
-
-
     /// After this, we are working with the gray image
     pthread_mutex_lock(&framelock_mutex);
-    if (BUFF_FULL < 1)
+    if (frameAccess == WRITING)
         pthread_cond_wait(&done_saving_frame,&framelock_mutex);
 
     timerA.tic();
@@ -168,10 +202,7 @@ while(1)
     mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
     //gray = gray.clone(); // force a hard copy (This might be a little bit expensive)
                          // consider implementing a circular image buffer to skip this step
-
-
-
-    BUFF_FULL = 0;
+    frameAccess = FREE;
     pthread_cond_broadcast(&done_using_frame);
     pthread_mutex_unlock(&framelock_mutex);
 
@@ -182,15 +213,13 @@ while(1)
     timerB.toc();
     timerA.toc();
 
+    double fps_cnt=fps.fps();
+    cout << "\r" "FPS: " << fps_cnt << flush;
+
+
     //imshow("drawing",binary);
     //waitKey(1);
 
-    cout << "process" << endl;
-
-    pthread_mutex_lock(&taketurns_mutex);
-    DONE_PROCESSING = 1; DONE_CAPTURING = 0;
-    pthread_cond_broadcast(&done_processing);
-    pthread_mutex_unlock(&taketurns_mutex);
 }
 pthread_exit(NULL);
 }
@@ -212,79 +241,3 @@ void custom_v4l2_init(void* parm_void)
     set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
 
 }
-
-
-
-
-
-
-
-//    CamObj cap;
-//
-//    // open the camera
-//    cap.set_image_size(IM_WIDTH,IM_HEIGHT);
-//    cap.set_framerate(30);
-//    cap.open(DEVICE);
-//
-//    vector<KeyPoint> keypoints;
-//    vector<Vec4i> hierarchy;
-//    vector<Vec3f> circles;
-//
-//    int prof_i=0;
-//    for (int iter=0; iter<2500; iter++)
-//    {
-//        if (prof_i++ == 150)
-//        {
-//            printf ("\nCapture time: %f milliseconds,time.\n",(float)time_tot * 1000.0);
-//            printf ("TimerA took: %d clicks (%f milliseconds).\n",(int)timerA.n_clocks(),timerA.ms());
-//            printf ("TimerB took: %d clicks (%f milliseconds).\n",(int)timerB.n_clocks(),timerB.ms());
-//            return 0;
-//        }
-//
-//        // capture an image
-//        time(&time_tic);
-//#if LIVE_CAPTURE
-//        cap >> frame;
-//#else
-//        resize(frame,frame,Size(IM_WIDTH,IM_HEIGHT));
-//#endif
-//
-//        time(&time_toc);
-//        time_tot += difftime(time_toc,time_tic);
-//
-//        double fps_cnt=fps.fps();
-//        if ((iter%15) == 0)
-//            cout << "\r" "FPS: " << fps_cnt << flush;
-//
-//        timerA.tic();
-//        const int mixCh[]= {2,0};
-//        mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
-//
-//
-//        imshow("gray",gray);
-//        waitKey(1);
-//        continue;
-//
-//
-//
-//
-//        threshold(gray,binary,THRESHOLD,255,THRESH_BINARY);  // OpenCV is faster at thresholding too
-//
-//        timerB.tic();
-//        findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
-//        timerB.toc();
-//        timerA.toc();
-//
-//
-//        /// Draw the contours image
-//        Mat drawing = Mat::zeros(480,640,CV_8UC1);
-//        for (int i=0; i<contours.size(); i++)
-//        {
-//            drawContours(drawing,contours,i,Scalar(255));
-//        }
-//        imshow("window",drawing);
-//        waitKey(1);
-//    }
-
-//    return 0;
-//}
