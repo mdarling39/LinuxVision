@@ -104,36 +104,40 @@ void *capture(void*)
 
         time(&time_tic);
         if ( 0 != v4l2_wait_for_data(&parms))   // calls select()
-            continue;
+            continue;                           // retry on EAGAIN
 
         struct v4l2_buffer buf;
         void* buff_ptr;
 
-        // The following three v4l2_ commands replace v4l2_grab_frame(&parms, frame);
         v4l2_fill_buffer(&parms, &buf, &buff_ptr); // dequeue buffer
 
-        pthread_mutex_lock(&taketurns_mutex);
-        if ( DONE_PROCESSING < 1)
-            pthread_cond_wait(&done_processing,&taketurns_mutex);
-        pthread_mutex_unlock(&taketurns_mutex);
+        ///Show the rate at which we are taking images from the camera
+        //double fps_cnt=fps.fps();
+        //cout << "\r" "FPS: " << fps_cnt << flush;
 
+        // May not want to wait for processing function to finish.
+        if ( DONE_PROCESSING < 1)
+        {
+            v4l2_queue_buffer(&parms, &buf);
+            --iters; // don't count this iteration
+            continue;
+        }
+
+        // Wait until processing thread is done accessing the buffer
         pthread_mutex_lock(&framelock_mutex);
         if (BUFF_FULL > 0)
             pthread_cond_wait(&done_using_frame,&framelock_mutex);
 
-        v4l2_process_image(frame, buff_ptr); /// THIS FUNCTION WRITES TO FRAME AND MUST BE PROTECTED!!!
+        // Decode the JPEG image and store to the framebuffer
+        v4l2_process_image(frame, buff_ptr);
         time(&time_toc);
         time_tot += difftime(time_toc, time_tic);
-
-        cout << "capture" << endl;
-        //double fps_cnt=fps.fps();
-        //cout << "\r" "FPS: " << fps_cnt << flush;
 
         BUFF_FULL = 1;
         pthread_cond_broadcast(&done_saving_frame);
         pthread_mutex_unlock(&framelock_mutex);
 
-        v4l2_queue_buffer(&parms, &buf);
+        v4l2_queue_buffer(&parms, &buf); // queue the buffer for next capture
 
         pthread_mutex_lock(&taketurns_mutex);
         DONE_CAPTURING = 1; DONE_PROCESSING = 0;
@@ -152,13 +156,13 @@ void *processing(void*)
 {
 while(1)
 {
+    // Wait until there is a new image worth processing
     pthread_mutex_lock(&taketurns_mutex);
     if (DONE_CAPTURING < 1)
         pthread_cond_wait(&done_capturing,&taketurns_mutex);
     pthread_mutex_unlock(&taketurns_mutex);
 
 
-    /// After this, we are working with the gray image
     pthread_mutex_lock(&framelock_mutex);
     if (BUFF_FULL < 1)
         pthread_cond_wait(&done_saving_frame,&framelock_mutex);
@@ -178,14 +182,16 @@ while(1)
     timerB.tic();
     threshold(gray,binary,215,255,THRESH_BINARY);
     const cv::Mat kernel(3,3,CV_8UC1,Scalar(255));
-    dilate(binary,binary,kernel);
+    findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
     timerB.toc();
     timerA.toc();
 
-    //imshow("drawing",binary);
+    double fps_cnt=fps.fps();
+    cout << "\r" "FPS: " << fps_cnt << flush;
+
+    //imshow("drawing",gray);
     //waitKey(1);
 
-    cout << "process" << endl;
 
     pthread_mutex_lock(&taketurns_mutex);
     DONE_PROCESSING = 1; DONE_CAPTURING = 0;
@@ -212,79 +218,3 @@ void custom_v4l2_init(void* parm_void)
     set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
 
 }
-
-
-
-
-
-
-
-//    CamObj cap;
-//
-//    // open the camera
-//    cap.set_image_size(IM_WIDTH,IM_HEIGHT);
-//    cap.set_framerate(30);
-//    cap.open(DEVICE);
-//
-//    vector<KeyPoint> keypoints;
-//    vector<Vec4i> hierarchy;
-//    vector<Vec3f> circles;
-//
-//    int prof_i=0;
-//    for (int iter=0; iter<2500; iter++)
-//    {
-//        if (prof_i++ == 150)
-//        {
-//            printf ("\nCapture time: %f milliseconds,time.\n",(float)time_tot * 1000.0);
-//            printf ("TimerA took: %d clicks (%f milliseconds).\n",(int)timerA.n_clocks(),timerA.ms());
-//            printf ("TimerB took: %d clicks (%f milliseconds).\n",(int)timerB.n_clocks(),timerB.ms());
-//            return 0;
-//        }
-//
-//        // capture an image
-//        time(&time_tic);
-//#if LIVE_CAPTURE
-//        cap >> frame;
-//#else
-//        resize(frame,frame,Size(IM_WIDTH,IM_HEIGHT));
-//#endif
-//
-//        time(&time_toc);
-//        time_tot += difftime(time_toc,time_tic);
-//
-//        double fps_cnt=fps.fps();
-//        if ((iter%15) == 0)
-//            cout << "\r" "FPS: " << fps_cnt << flush;
-//
-//        timerA.tic();
-//        const int mixCh[]= {2,0};
-//        mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
-//
-//
-//        imshow("gray",gray);
-//        waitKey(1);
-//        continue;
-//
-//
-//
-//
-//        threshold(gray,binary,THRESHOLD,255,THRESH_BINARY);  // OpenCV is faster at thresholding too
-//
-//        timerB.tic();
-//        findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
-//        timerB.toc();
-//        timerA.toc();
-//
-//
-//        /// Draw the contours image
-//        Mat drawing = Mat::zeros(480,640,CV_8UC1);
-//        for (int i=0; i<contours.size(); i++)
-//        {
-//            drawContours(drawing,contours,i,Scalar(255));
-//        }
-//        imshow("window",drawing);
-//        waitKey(1);
-//    }
-
-//    return 0;
-//}

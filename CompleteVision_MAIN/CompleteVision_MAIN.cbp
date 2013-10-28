@@ -60,6 +60,9 @@
 		<Unit filename="../Threshold.hpp" />
 		<Unit filename="../customblobdetector.cpp" />
 		<Unit filename="../customblobdetector.hpp" />
+		<Unit filename="../main_nonthreaded.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="../main_threaded.cpp" />
 		<Unit filename="../morph.hpp" />
 		<Unit filename="../neon_instructions.h" />
