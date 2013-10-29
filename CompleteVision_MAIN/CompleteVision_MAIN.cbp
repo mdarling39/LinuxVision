@@ -48,6 +48,7 @@
 		<Unit filename="../Config.hpp" />
 		<Unit filename="../FPSCounter.cpp" />
 		<Unit filename="../FPSCounter.hpp" />
+		<Unit filename="../FlightDataRecording.hpp" />
 		<Unit filename="../Global.hpp" />
 		<Unit filename="../KalmanFilter.cpp" />
 		<Unit filename="../KalmanFilter.hpp" />
@@ -64,6 +65,7 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="../main_threaded.cpp" />
+		<Unit filename="../main_threaded_test.cpp" />
 		<Unit filename="../morph.hpp" />
 		<Unit filename="../neon_instructions.h" />
 		<Unit filename="../v4l2Cap.cpp" />
