@@ -5,7 +5,7 @@
 
 
 // EVERYTHING BELOW HERE IS ORIGINAL OPENCV CODE
-#define DEBUG_BLOB_DETECTOR
+//#define DEBUG_BLOB_DETECTOR
 #ifdef DEBUG_BLOB_DETECTOR
 #  include "opencv2/opencv_modules.hpp"
 #  ifdef HAVE_OPENCV_HIGHGUI
@@ -172,7 +172,7 @@ void CustomBlobDetector::findBlobs(const cv::Mat &image, const cv::Mat &binaryIm
     vector < vector<Point> > contours;
     Mat tmpBinaryImage = binaryImage.clone();
     //findContours(tmpBinaryImage, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
-    findContours(tmpBinaryImage,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);  // Don't return "holes"
+    findContours(tmpBinaryImage,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);  // Use CV_RETR_EXTERNAL -- don't return "holes"
 
 
 #ifdef DEBUG_BLOB_DETECTOR

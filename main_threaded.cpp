@@ -16,7 +16,8 @@
 #include <iterator>
 #include <pthread.h>    // multithreading
 
-
+#define PRINT_LINEBREAK()\
+ printf("--------------------------------------------------------------------------------\n")
 
 using namespace std;
 using namespace cv;
@@ -54,6 +55,8 @@ pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
 
+void selfIdentifySystem(void);
+unsigned int iteration = 0; // track iterations through processing loops
 
 int main()
 {
@@ -72,15 +75,14 @@ int main()
     PnP.setModelPoints(modelPointsFilename);
     cout << "3-D model geometry read-in." << endl;
 
-    if(ARM)
-    {
+#if ARM
         BBBSerial Serial;
         cout << "Serial ports for BeagleBone Black initialized." << endl;
-    }
+#endif
 
     // Initialize any data recording specified by macros in Global.hpp
     initializeFlightDataRecorder();
-    cout << "Flight data recorder initialized" << endl;
+    cout << "Flight data recorder initialized." << endl;
 
     // (Camera initialization will occur in the "capture" thread)
 
@@ -126,7 +128,8 @@ void *capture(void*)
         v4l2_fill_buffer(&parms, &buf, &user_buffer.ptr[buf.index]);
         v4l2_queue_buffer(&parms, &buf);
     }
-    cout << "Camera initialized and capturing.\n" << endl;
+    cout << "Camera initialized and capturing." << endl;
+    PRINT_LINEBREAK();
 
 
 
@@ -164,8 +167,9 @@ void *processing(void*)
 sleep(3); // Ensure that the capture thread has time to initialize and fill buffer
 while(1)
 {
+    iteration++;
 
-    /// TODO:  Include some kind of protection to make sure we dont' repeatedly process the same frame
+    /// TODO:  Include some kind of protection to make sure we don't repeatedly process the same frame
     pthread_mutex_lock(&framelock_mutex);
     // Decode JPEG image stored in the most recently dequeued buffer
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
@@ -178,22 +182,85 @@ while(1)
 
     // Detect feature points
     thresh.set_image(gray);
-    thresh.detect_blobs();
-    vector<Point2f> imagePoints = thresh.get_points();
 
+    /// TODO: Not sure where binary image gets set -- what if I want to dilate before detect_blobs()?
+    /*
     /// Optional dilation
     cv::Mat kernel(5,5,CV_8UC1,Scalar(0));
     cv::circle(kernel,Point(2,2),2,Scalar(255));
     dilate(binary,binary,kernel);
+    */
 
-    findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    thresh.detect_blobs();
+    vector<Point2f> imagePoints = thresh.get_points();
 
+    // Compute pose estimate
+    vector<double> poseState(6);
+    double poseErr;
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
+    if (poseIters > 0)
+    {
+        PnP.is_current = true;
+    } else {
+        PnP.is_current - false;
+    }
+
+
+    // send pose estimate to autopilot
+#if ARM
+    Serial.writeData(poseState);
+#endif
+
+
+/// ////////// DEBUGGING SPECIFIC OPTIONS ////////// ///
+
+    /// Print fps and pose estimate to console in real-time
+#ifdef POSE_TO_CONSOLE
     double fps_cnt=fps.fps();
-    printf("\r  FPS:  %2.2f   contours: %4d",fps_cnt,contours.size());
+    printf("\e[J  FPS:  %6.2f        # of detected features: %4d\n",fps_cnt,imagePoints.size());
+    printf("  Pose Estimate: (x, y, z, roll, pitch, yaw) [units: in/deg]\n");
+    printf("      %4.2f %4.2f %4.2f %4.2f %4.2f %4.2f\r\e[2A",
+    poseState[0],poseState[1], poseState[2], poseState[3],
+    poseState[4], poseState[5], poseState[6]);
     fflush(stdout);
+#endif /* POSE_TO_CONSOLE */
 
-    //imshow("drawing",gray);
-    //waitKey(1);
+#ifdef DEBUG_VIDEO
+        // print blobs on image (green)
+		thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
+
+		// print the 5 "most probable" blobs on image (blue)
+		if (imagePoints.size() > 0) {
+			for (int i = 0; i < NO_LEDS; i++) {
+				cv::circle(frame,imagePoints[i], 5, cv::Scalar(255,0,0), 3);
+			}
+		}
+
+		PnP.drawOverFrame(frame);
+		imshow("DEBUG_VIDEO",frame);
+		waitKey(1);
+#endif /* DEBUG_VIDEO */
+
+/// ////////// DEBUGGING SPECIFIC OPTIONS ////////// ///
+
 }
 pthread_exit(NULL);
+}
+
+
+
+
+void selfIdentifySystem(void)
+{
+std::cout << "System is:   ";
+#if OSX
+    std::cerr << "OSX -- no longer supported" << std::endl;
+#elif LINUX
+    std::cout << "LINUX" << std::endl;
+#else
+    std::cerr << "Unknown System!" << std::endl;
+#endif
+#if ARM
+    std::cout << "ARM" << std::endl;
+#endif
 }

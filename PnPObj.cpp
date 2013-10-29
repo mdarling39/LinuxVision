@@ -168,9 +168,9 @@ bool PnPObj::setCamProps(const std::string filename) {
 
 #ifdef DEBUG_STDOUT
 	// write to standard output
-	std::cout << "\nCamera properties read from:\n" << filename << std::endl;
-	std::cout << "\ncameraMatrix:\n" << cameraMatrix << std::endl;
-	std::cout << "\ndistCoeffs:\n" << distCoeffs << std::endl;
+	std::cout << "\n   Camera properties read from:\n   " << filename << std::endl;
+	std::cout << "   cameraMatrix:\n   " << cameraMatrix << std::endl;
+	std::cout << "   distCoeffs:\n   " << distCoeffs << "\n" << std::endl;
 #endif /* DEBUG_MODE */
 
 	if (cameraMatrix.empty())
@@ -272,8 +272,8 @@ bool PnPObj::setModelPoints(const char* pointsFilename) {
 	pointsFile.close();
 
 #ifdef DEBUG_STDOUT
-	std::cout << "\nModel points read from:\n" << pointsFilename << std::endl;
-	std::cout << "\nmodelPoints:\n" << modelPoints << std::endl;
+	std::cout << "\n   Model points read from:\n   " << pointsFilename << std::endl;
+	std::cout << "   modelPoints:\n   " << modelPoints << "\n" <<std::endl;
 #endif /* DEBUG_MODE */
 
 	return 1;
