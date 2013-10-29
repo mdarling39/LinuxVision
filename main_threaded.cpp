@@ -25,7 +25,6 @@ const int IM_HEIGHT = 480;
 const unsigned char THRESHOLD = 225;
 const unsigned char THRESHOLD_MAXVAL = 255;
 
-
 struct v4l2Parms parms;
 #define BUF_SZ 4
 struct v4l2_buffer buf;
@@ -53,7 +52,6 @@ void* processing(void*);
 pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
-
 
 int main()
 {
