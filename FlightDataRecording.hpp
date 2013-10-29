@@ -1,13 +1,10 @@
 #ifndef FLIGHTDATARECORDING_HPP_INCLUDED
 #define FLIGHTDATARECORDING_HPP_INCLUDED
 
-/// Used for blobfile
-#include<stdio.h>
-FILE *bFile;
-bool modeOn = false;
+#include "Global.hpp"
+#include "Config.hpp"
+#include <opencv2/opencv.hpp>
 
-/// Used for posefile
-FILE *pFile;
 
 /// Used for saving sample frames
 #include <sys/types.h>
@@ -23,7 +20,7 @@ unsigned int frameSkip = 30;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void writeout_blobfile_header(const char* blobFilename,const CustomBlobDetector::Params blobParams){
+void writeout_blobfile_header(FILE* &bFile, const char* blobFilename,const CustomBlobDetector::Params blobParams){
 
 	std::cout << "   creating a logfile to hold blob finding data" << std::endl;
 
@@ -54,7 +51,7 @@ void writeout_blobfile_header(const char* blobFilename,const CustomBlobDetector:
 
 
 
-void writeout_posefile_header(const char* poseFilename){
+void writeout_posefile_header(FILE* &pFile, const char* poseFilename){
 
 	std::cout << "   creating a logfile to pose estimate data" << std::endl;
 
@@ -100,13 +97,14 @@ void initializeFlightDataRecorder(void)
 {
 #ifdef FOUNDBLOBS_TO_FILE
     // begin blobFile and writeout header
-    writeout_blobfile_header(blobFilename,blobParams);
+    extern CustomBlobDetector::Params blobParams;
+    writeout_blobfile_header(bFile, blobFilename,blobParams);
     cout << "   blobfile header written" << endl;
 #endif /*FOUNDBLOBS_TO_FILE*/
 
 #ifdef POSE_TO_FILE
     // begin poseFile and writeout header
-    writeout_posefile_header(poseFilename);
+    writeout_posefile_header(pFile, poseFilename);
     cout << "   posefile header written" << endl;
 #endif /*POSE_TO_FILE*/
 
@@ -121,6 +119,38 @@ void initializeFlightDataRecorder(void)
     cv::namedWindow("DEBUG_VIDEO");
     cout << "   real-time debugging window created" << endl;
 #endif /*DEBUG_VIDEO*/
+}
+
+void writetoBlobFile(Threshold &threshobj)
+{
+
+}
+
+/*
+void writetoPoseFile(char* poseFilename, std::vector<double> poseState[6], double poseErr, int poseIters, std::vector<cv::Point2f> imagePoints[5])
+{
+// writeout pose estimate to logfile
+		pFile = fopen(poseFilename,"a");
+		fprintf(pFile,"%08.4f,%08.4f,%08.4f,%08.4f,%08.4f,%08.4f   "
+				      "%9.6f   "
+				      "%4d   "
+				      "%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f\n",
+				       poseState[0],poseState[1],poseState[2],
+				       poseState[3],poseState[4],poseState[5],
+				       poseErr,
+				       poseIters,
+				       imagePoints[0].x,imagePoints[0].y,
+				       imagePoints[1].x,imagePoints[1].y,
+				       imagePoints[2].x,imagePoints[2].y,
+				       imagePoints[3].x,imagePoints[3].y,
+				       imagePoints[4].x,imagePoints[4].y);
+        fclose(pFile);
+}
+*/
+
+void saveDebugFrame()
+{
+
 }
 
 #endif // FLIGHTDATARECORDING_HPP_INCLUDED

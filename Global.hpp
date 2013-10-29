@@ -34,10 +34,10 @@
 #define POSE_TO_CONSOLE             1      // write standard info to console
 #define DEBUG_STDOUT	            1		// write debug info to stdout
 #define DEBUG_VIDEO		            1       // display video debug data
-//#define FOUNDBLOBS_TO_FILE	        1       // write blob coordinates to file
-//#define SAVEOFF_FRAMES		        1       // save off frames to memory
+#define FOUNDBLOBS_TO_FILE	        1       // write blob coordinates to file
 //#define POSE_TO_FILE			    1       // write pose estimates to file
-//#define DO_KALMAN_FILTER		    1       // implement kalman filter for object tracking TODO:  Not using Kalman fitler, remove from the code
+//#define SAVEOFF_FRAMES		        1       // save off frames to memory
+//#define DO_KALMAN_FILTER		    1       // implement kalman filter for object tracking -- (not functional)
 
 
 /// Conversions
@@ -51,5 +51,19 @@ const int DEG2RAD = PI/180;
 /// Graphical Settings
 const double AXES_LN = 10*IN2MM;	// TODO:	Move AXES_LN into a private member of the PnP class  & provide setter/getter
 const int NO_LEDS = 5;		        // TODO:	Move NO_LEDS into a private member of the PnP class & provide setter/getter
+
+
+
+/// Flight data recording
+char blobFilename[] = "blobFile.txt";		// log file name for blob detection
+char imageSavepath[] = "TestImages";		// directory to save debug frames in
+char poseFilename[] = "poseFile.txt";		// log file name for pose estimates
+
+/// Used for blobfile
+#include<stdio.h>
+FILE *bFile;
+
+/// Used for posefile
+FILE *pFile;
 
 #endif /* GLOBAL_HPP_ */

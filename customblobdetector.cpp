@@ -2,6 +2,7 @@
 #include "customblobdetector.hpp"
 #include <iterator>
 #include <iostream>
+#include <cstdio>
 
 
 // EVERYTHING BELOW HERE IS ORIGINAL OPENCV CODE
@@ -346,24 +347,17 @@ void CustomBlobDetector::detectImpl(const cv::Mat& image, std::vector<cv::KeyPoi
 #endif
 
 
-
     // sort everything in order of increasing error
     sort(curContourStructs.begin(),curContourStructs.end());
 
 
-    // convert centers to keyPoints (modified to use errors)
-    //std::cout << "Errors:" << std::endl;
-
-
+/// Write to file
 #ifdef FOUNDBLOBS_TO_FILE
     // print blob data to file
-    extern FILE *bFile;
-    //fprintf(bFile,"%15s%15s%15s%15s%15s%15s\n","Errors:","TotalError","circularity","inertiaRatio","convexity","blobColor");
-#endif //FOUNDBLOBS_TO_FILE
+    bFile = fopen(blobFilename,"a");
 
     if (curContourStructs.size() == 0)
     {
-#ifdef FOUNDBLOBS_TO_FILE
         fprintf(bFile,"%15s%15s%15s%15s%15s%15s%15s%15s%15s\n",
                 "NaN",
                 "NaN",
@@ -374,15 +368,11 @@ void CustomBlobDetector::detectImpl(const cv::Mat& image, std::vector<cv::KeyPoi
                 "NaN",
                 "NaN",
                 "NaN");
-#endif //FOUNDBLOBS_TO_FILE
-    }
-    else
-    {
+    } else {
         for (int i = 0; i < min((int)curContourStructs.size(), params.maxPoints); i++)
         {
             if (!params.filterByError || curContourStructs[i].targetError < params.maxError)
             {
-#ifdef FOUNDBLOBS_TO_FILE
                 //std::cout << "  " << curContourStructs[i].targetError;
                 fprintf(bFile,"%15d%15.4f%15.4f%15.4f%15.4f%15.4f%15.4f%15.4f%15.4f\n",
                         i,
@@ -394,17 +384,30 @@ void CustomBlobDetector::detectImpl(const cv::Mat& image, std::vector<cv::KeyPoi
                         curContourStructs[i].area,
                         curContourStructs[i].imageX,
                         curContourStructs[i].imageY);
-#endif //FOUNDBLOBS_TO_FILE
                 KeyPoint kpt((Point2d)curContourStructs[i].center.location, (float)(curContourStructs[i].center.radius));
                 keypoints.push_back(kpt);
             }
         }
     }
 
-#ifdef FOUNDBLOBS_TO_FILE
+
+    // close the file
     fclose(bFile);
-    //std::cout << std::endl;
-#endif  //FOUNDBLOBS_TO_FILE
+#endif /* FOUNDBLOBS_TO_FILE */
+
+
+    // convert centers to keyPoints (modified to use errors)
+    if (curContourStructs.size() != 0)
+    {
+        for (int i = 0; i < min((int)curContourStructs.size(), params.maxPoints); i++)
+        {
+            if (!params.filterByError || curContourStructs[i].targetError < params.maxError)
+            {
+                KeyPoint kpt((Point2d)curContourStructs[i].center.location, (float)(curContourStructs[i].center.radius));
+                keypoints.push_back(kpt);
+            }
+        }
+    }
 
 
 #ifdef DEBUG_BLOB_DETECTOR

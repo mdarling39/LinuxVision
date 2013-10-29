@@ -43,12 +43,11 @@ void custom_v4l2_init(void* parm_void)
 
 
 /// Threshold object initialization function
-void initializeThresholdObj(Threshold &thresh_obj)
+void initializeThresholdObj(Threshold &thresh_obj, CustomBlobDetector::Params &blobParams)
 {
-    CustomBlobDetector::Params blobParams;
 
     // TODO:  Can look at trying to read these values in from xml/yml later
-	blobParams.maxPoints = 				8;
+	blobParams.maxPoints = 				10;
 	blobParams.maxError = 				1.8;
 	blobParams.minArea = 				1;
 	blobParams.maxArea = 				350;
@@ -95,11 +94,6 @@ const char* modelPointsFilename =
 const double POSE_ERR_TOL = 0.026;				// if reprojection error is lower than this --> move on
 const double SECONDARY_POSE_ERR_TOL = 0.075;	// otherwise, try re-ordering LED's and choose lowest
                                                 // error that still satisfies the secondary error tolerance
-
-/// Flight data recording
-const char blobFilename[] = "blobFile.txt";		// log file name for blob detection
-const char imageSavepath[] = "TestImages";		// directory to save debug frames in
-const char poseFilename[] = "poseFile.txt";		// log file name for pose estimates
 
 
 #endif /* CONFIG_H_ */

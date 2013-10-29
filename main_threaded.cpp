@@ -40,7 +40,12 @@ Mat frame(Size(IM_WIDTH,IM_HEIGHT),CV_8UC3);
 Mat gray(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 Mat binary(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 
+vector<double> poseState(6);
+vector <double> reportState(6,NAN); // contains the previous "good" state
+double poseErr;
+
 // User-defined class objects
+CustomBlobDetector::Params blobParams;  // Specifies feature detection criteria (modified in Config.hpp)
 Threshold thresh;   // Does feature detection (thresholding wrapper class for customBlobDetector)
 PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
 FPSCounter fps(15); // Computes real-time frame rate
@@ -64,7 +69,7 @@ int main()
     selfIdentifySystem();
 
     // Initialize threshold object
-    initializeThresholdObj(thresh);
+    initializeThresholdObj(thresh, blobParams);
     cout << "Feature detector initialized." << endl;
 
     // Read camera intrinsic properties
@@ -146,11 +151,6 @@ void *capture(void*)
         v4l2_queue_buffer(&parms, &buf);
         pthread_cond_broadcast(&done_saving_frame);
         pthread_mutex_unlock(&framelock_mutex);
-
-        // (Uncomment to display the rate at which images are *captured*)
-//        double fps_cnt=fps.fps();
-//        cout << "\r" "FPS: " << fps_cnt << flush;
-
     }
 
     v4l2_stop_capturing(&parms);
@@ -195,14 +195,13 @@ while(1)
     vector<Point2f> imagePoints = thresh.get_points();
 
     // Compute pose estimate
-    vector<double> poseState(6);
-    double poseErr;
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
     if (poseIters > 0)
     {
         PnP.is_current = true;
+        reportState = poseState;
     } else {
-        PnP.is_current - false;
+        PnP.is_current = false;
     }
 
 
@@ -212,16 +211,22 @@ while(1)
 #endif
 
 
+
+
+
 /// ////////// DEBUGGING SPECIFIC OPTIONS ////////// ///
 
     /// Print fps and pose estimate to console in real-time
 #ifdef POSE_TO_CONSOLE
     double fps_cnt=fps.fps();
     printf("\e[J  FPS:  %6.2f        # of detected features: %4d\n",fps_cnt,imagePoints.size());
-    printf("  Pose Estimate: (x, y, z, roll, pitch, yaw) [units: in/deg]\n");
-    printf("      %4.2f %4.2f %4.2f %4.2f %4.2f %4.2f\r\e[2A",
-    poseState[0],poseState[1], poseState[2], poseState[3],
-    poseState[4], poseState[5], poseState[6]);
+    printf("  Pose Estimate:%7s  %7s  %7s  %7s  %7s  %7s   [in/deg]\n","x","y","z","roll","pitch","yaw");
+    printf("                %7.1f  %7.1f  %7.1f  %7.1f  %7.1f  %7.1f",
+    reportState[0], reportState[1], reportState[2],
+    reportState[3], reportState[4], reportState[5]);
+    if (!PnP.is_current)
+        printf("   ZOH");
+    printf("\r\e[2A"); // move cursor
     fflush(stdout);
 #endif /* POSE_TO_CONSOLE */
 

@@ -180,7 +180,7 @@
 
 	    cap.set_width(desiredWidth);                     // set frame dims.
 	    cap.set_height(desiredHeight);
-
+	    return true;
 	}
 
 	bool CamObj::set_framerate_linux(int desired_fps){
