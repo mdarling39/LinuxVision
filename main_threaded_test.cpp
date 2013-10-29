@@ -1,31 +1,32 @@
+//#include "CamObj.hpp"
+#include "v4l2_c.h"
 
-#include "Global.hpp"
-#include "Config.hpp"
-#include "v4l2_c.h"  // C-friendly version of CamObj.hpp so we can do multithreading
 #include "FPSCounter.hpp"
-#include "Threshold.hpp"
-#include "PnPObj.hpp"
-#include "BBBSerial.h"
-#include "FlightDataRecording.hpp"
-#include "ProfilerTool.h"  // ProfilerTool class to make profiling code easier
+#include "ProfilerTool.h"
+#include "morph.hpp"
 
 
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
-#include <iterator>
 #include <pthread.h>    // multithreading
-
 
 
 using namespace std;
 using namespace cv;
 
+#ifdef __arm__
+const int DEVICE=0;
+#else
+const int DEVICE=1;
+#endif // __arm__
+const int IM_WIDTH = 640;
+const int IM_HEIGHT = 480;
+const unsigned char THRESHOLD = 225;
+const unsigned char THRESHOLD_MAXVAL = 255;
 
-/// ////////// Global Variables ////////// ///
-
-// Camera parameters and buffers
 struct v4l2Parms parms;
+#define BUF_SZ 4
 struct v4l2_buffer buf;
 void* buff_ptr;
 struct user_buffer_t{
@@ -34,57 +35,26 @@ struct user_buffer_t{
     int buf_last;
 } user_buffer;
 
-// OpenCV image objects
+
 Mat frame(Size(IM_WIDTH,IM_HEIGHT),CV_8UC3);
 Mat gray(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 Mat binary(Size(IM_WIDTH,IM_HEIGHT),CV_8UC1);
 
-// User-defined class objects
-Threshold thresh;   // Does feature detection (thresholding wrapper class for customBlobDetector)
-PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
-FPSCounter fps(15); // Computes real-time frame rate
-/// ////////////////////////////////////// ///
+vector<vector<Point> > contours;
 
+FPSCounter fps(15);
 
+void custom_v4l2_init(void*);
 
-/// Multithreading variable declarations
+/// Multithreading variables
 void* capture(void*);
 void* processing(void*);
 pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
 
-
 int main()
 {
-    // Print the system to stdout
-    selfIdentifySystem();
-
-    // Initialize threshold object
-    initializeThresholdObj(thresh);
-    cout << "Feature detector initialized." << endl;
-
-    // Read camera intrinsic properties
-    PnP.setCamProps(camDataFilename);
-    cout << "Camera properties read-in." << endl;
-
-    // Read 3-D model geometry
-    PnP.setModelPoints(modelPointsFilename);
-    cout << "3-D model geometry read-in." << endl;
-
-    if(ARM)
-    {
-        BBBSerial Serial;
-        cout << "Serial ports for BeagleBone Black initialized." << endl;
-    }
-
-    // Initialize any data recording specified by macros in Global.hpp
-    initializeFlightDataRecorder();
-    cout << "Flight data recorder initialized" << endl;
-
-    // (Camera initialization will occur in the "capture" thread)
-
-
     // Initialize pthreads
     pthread_t capture_thread;
     pthread_t processing_thread;
@@ -94,23 +64,22 @@ int main()
 
     pthread_join(capture_thread,NULL); // Let the capture thread end the program
 
-    cout << "Program ended" << endl;
+    cout << "DONE" << endl;
+
     return 0;
 }
 
-
-
 void *capture(void*)
 {
-
     // Configure camera properties
+
     v4l2_set_defalut_parms(&parms);
     char devName[15];
     sprintf(devName,"/dev/video%d",DEVICE);
     strcpy(parms.dev_name,devName);
-    parms.width = IM_WIDTH;
-    parms.height = IM_HEIGHT;
-    parms.fps = IM_FPS;
+    parms.width = 640;
+    parms.height = 480;
+    parms.fps = 30;
     parms.timeout = 1;
     parms.customInitFcn = &custom_v4l2_init;
 
@@ -119,24 +88,21 @@ void *capture(void*)
     v4l2_init_device(&parms);
     v4l2_start_capturing(&parms);
 
-    // Populate the circular buffer of pointers to image data
+    // Cycle through and fill up the image pointers
     for (int i=0; i<2*BUF_SZ; i++)
     {
         while(0 != v4l2_wait_for_data(&parms)){}
         v4l2_fill_buffer(&parms, &buf, &user_buffer.ptr[buf.index]);
         v4l2_queue_buffer(&parms, &buf);
     }
-    cout << "Camera initialized and capturing.\n" << endl;
 
-
-
-    //  Capture frames indefinitely
+    //  Capture frames
     while(1)
     {
-        if ( 0 != v4l2_wait_for_data(&parms))   // calls select() -- waits for data to be ready
+        if ( 0 != v4l2_wait_for_data(&parms))   // calls select()
             continue;                           // retry on EAGAIN
 
-        pthread_mutex_lock(&framelock_mutex);  // protect from other threads modifying image buffers
+        pthread_mutex_lock(&framelock_mutex);
         user_buffer.buf_idx = buf.index;
         user_buffer.buf_last = (buf.index - 1) % BUF_SZ;
         v4l2_fill_buffer(&parms, &buf, &user_buffer.ptr[user_buffer.buf_idx]); // dequeue buffer
@@ -144,7 +110,6 @@ void *capture(void*)
         pthread_cond_broadcast(&done_saving_frame);
         pthread_mutex_unlock(&framelock_mutex);
 
-        // (Uncomment to display the rate at which images are *captured*)
 //        double fps_cnt=fps.fps();
 //        cout << "\r" "FPS: " << fps_cnt << flush;
 
@@ -157,11 +122,9 @@ void *capture(void*)
     pthread_exit(NULL);
 }
 
-
-
 void *processing(void*)
 {
-sleep(3); // Ensure that the capture thread has time to initialize and fill buffer
+sleep(3); //Ensure that the capture thread starts us off
 while(1)
 {
 
@@ -171,15 +134,13 @@ while(1)
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
     pthread_mutex_unlock(&framelock_mutex);
 
-    // Extract the red channel and save as gray image
     const int mixCh[]= {2,0};
-    mixChannels(&frame,1,&gray,1,mixCh,1);
-    //gray = gray.clone();  // (uncomment to force a hard copy of image buffer)
+    mixChannels(&frame,1,&gray,1,mixCh,1);  // For now, OpenCV's implementation is faster
+    //gray = gray.clone(); // force a hard copy (This might be a little bit expensive)
+                         // consider implementing a circular image buffer to skip this step
 
-    // Detect feature points
-    thresh.set_image(gray);
-    thresh.detect_blobs();
-    vector<Point2f> imagePoints = thresh.get_points();
+
+    threshold(gray,binary,215,255,THRESH_BINARY);
 
     /// Optional dilation
     cv::Mat kernel(5,5,CV_8UC1,Scalar(0));
@@ -196,4 +157,22 @@ while(1)
     //waitKey(1);
 }
 pthread_exit(NULL);
+}
+
+void custom_v4l2_init(void* parm_void)
+{
+#define V4L2_CID_C920_ZOOMVAL    0x9A090D  //Zoom           (wide=0, telephoto=500)
+#define V4L2_CID_C920_AUTOFOCUS  0x9A090C  //Autofocus      (0=OFF, 1 = ON)
+#define V4L2_CID_C920_FOCUSVAL   0X9A090A  //Focus Value    (min=0, max=250)
+#define V4L2_C920_FOCUS_INF      0
+#define V4L2_C920_FOCUS_MACRO    250
+
+    struct v4l2Parms* parm = (struct v4l2Parms*) parm_void;
+
+    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);    // Turn autofocus off
+    set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
+    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
+    //set_parm(parm->fd, V4L2_CID_SATURATION,128);      // Adjust Saturation (0-255)
+    set_parm(parm->fd, V4L2_CID_SHARPNESS,0);         // Blur the image to get smoother contours (0-255)
+
 }
