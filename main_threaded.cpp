@@ -54,7 +54,10 @@ pthread_mutex_t framelock_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/Multithreading
 int main()
 {
     // Initialize pthreads
@@ -126,7 +129,11 @@ void *capture(void*)
 
 void *processing(void*)
 {
+<<<<<<< HEAD
 sleep(3); //Ensure that the capture thread starts us off
+=======
+sleep(1); //Ensure that the capture thread starts us off
+>>>>>>> origin/Multithreading
 while(1)
 {
 
@@ -143,12 +150,16 @@ while(1)
 
 
     threshold(gray,binary,215,255,THRESH_BINARY);
+<<<<<<< HEAD
 
     /// Optional dilation
     cv::Mat kernel(5,5,CV_8UC1,Scalar(0));
     cv::circle(kernel,Point(2,2),2,Scalar(255));
     dilate(binary,binary,kernel);
 
+=======
+    const cv::Mat kernel(5,5,CV_8UC1,Scalar(255));
+>>>>>>> origin/Multithreading
     findContours(binary,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
 
     double fps_cnt=fps.fps();
