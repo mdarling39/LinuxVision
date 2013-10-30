@@ -8,7 +8,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 #include "v4l2_c.h"         // for custom_v4l2_init
-#include "Threshold.hpp"    // for initializeThresholdObj
+#include "Threshold.hpp"    // for definition of Threshold class
 
 /// Camera settings
 #if ARM
@@ -51,11 +51,11 @@ void initializeThresholdObj(Threshold &thresh_obj, CustomBlobDetector::Params &b
 	blobParams.maxError = 				1.8;
 	blobParams.minArea = 				1;
 	blobParams.maxArea = 				350;
-	blobParams.minCircularity = 		0.05;
+	blobParams.minCircularity = 		0.0;
 	blobParams.maxCircularity = 		1.1;
-	blobParams.minInertiaRatio = 		0.05;
+	blobParams.minInertiaRatio = 		0.0;
 	blobParams.maxInertiaRatio = 		1.1;
-	blobParams.minConvexity = 			0.05;
+	blobParams.minConvexity = 			0.0;
 	blobParams.maxConvexity = 			1.1;
 	blobParams.minThreshold = 			225;
 
@@ -99,15 +99,9 @@ const double SECONDARY_POSE_ERR_TOL = 0.075;	// otherwise, try re-ordering LED's
                                                 // error that still satisfies the secondary error tolerance
 
 /// Flight data recording
-char blobFilename[] = "blobFile.txt";		// log file name for blob detection
 char imageSavepath[] = "TestImages";		// directory to save debug frames in
-char poseFilename[] = "poseFile.txt";		// log file name for pose estimates
+unsigned int frameSkip_ms = 2000;           // Sets how often to save an image (in milliseconds)
 
-/// Used for blobfile
-FILE *bFile;
-
-/// Used for posefile
-FILE *pFile;
 
 
 #endif /* CONFIG_H_ */

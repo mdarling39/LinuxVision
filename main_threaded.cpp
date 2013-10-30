@@ -64,7 +64,6 @@ pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
 
 void selfIdentifySystem(void);
-unsigned int iteration = 0; // track iterations through processing loops
 
 int main()
 {
@@ -89,11 +88,16 @@ int main()
     cout << "Serial ports for BeagleBone Black initialized." << endl;
 #endif /* ARM */
 
-    // Initialize any data recording specified by macros in Global.hpp
-    initializeFlightDataRecorder();
-        cout << "Flight data recorder initialized." << endl;
+    // Image directory is initialized after a frame is captured in the capture thread
+
+#ifdef DEBUG_VIDEO
+    // Much faster if we create a named window here
+    cv::namedWindow("DEBUG_VIDEO");
+    cout << "   real-time debugging window created" << endl;
+#endif /*DEBUG_VIDEO*/
 
     // (Camera initialization will occur in the "capture" thread)
+
 
 
     // Initialize pthreads
@@ -138,6 +142,14 @@ void *capture(void*)
         v4l2_queue_buffer(&parms, &buf);
     }
     cout << "Camera initialized and capturing." << endl;
+
+        // Initialize and flight recording tools
+#ifdef SAVEOFF_FRAMES
+    // clear the folder and write a reference RGB frame
+    v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
+    setup_images_dir(imageSavepath,frame);
+    cout << "   images directory created" << endl;
+#endif /*SAVEOFF_FRAMES*/
     PRINT_LINEBREAK();
 
 
@@ -171,7 +183,6 @@ void *processing(void*)
 sleep(3); // Ensure that the capture thread has time to initialize and fill buffer
 while(1)
 {
-    iteration++;
 
     /// TODO:  Include some kind of protection to make sure we don't repeatedly process the same frame
     pthread_mutex_lock(&framelock_mutex);
@@ -249,6 +260,10 @@ while(1)
 		imshow("DEBUG_VIDEO",frame);
 		waitKey(1);
 #endif /* DEBUG_VIDEO */
+
+#ifdef SAVEOFF_FRAMES
+    saveDebugFrame(frame, imageSavepath);
+#endif /* SAVEOFF_FRAMES */
 
 /// ////////// DEBUGGING SPECIFIC OPTIONS ////////// ///
 

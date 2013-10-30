@@ -33,14 +33,11 @@
 
 
 
-/// Macros
+/// Macros (removed ability to save blobFile and poseFile)
 #define POSE_TO_CONSOLE             1      // write standard info to console
 #define DEBUG_STDOUT	            1		// write debug info to stdout
 //#define DEBUG_VIDEO		            1       // display video debug data
-//#define FOUNDBLOBS_TO_FILE	        1       // write blob coordinates to file
-//#define POSE_TO_FILE			    1       // write pose estimates to file
 //#define SAVEOFF_FRAMES		        1       // save off frames to memory
-//#define DO_KALMAN_FILTER		    1       // implement kalman filter for object tracking -- (not functional)
 
 
 /// Conversions
