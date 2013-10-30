@@ -83,17 +83,31 @@ void initializeThresholdObj(Threshold &thresh_obj, CustomBlobDetector::Params &b
 /// Camera intrinisics and 3-D model geometry
 // path to intrinsic camera properties
 const std::string camDataFilename =
-		"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
+		//"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
+		"/home/ubuntu/Vision/multithreading/Calibration/C920-640x480_IntrinsicParams.yml";
+
 
 // path to 3-D model geometry file
 const char* modelPointsFilename =
-		"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Glider_Geom.txt";
+		//"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Glider_Geom.txt";
+		"/home/ubuntu/Vision/multithreading/Calibration/Glider_Geom.txt";
 
 
 /// Pose estimate error tolerances
 const double POSE_ERR_TOL = 0.026;				// if reprojection error is lower than this --> move on
 const double SECONDARY_POSE_ERR_TOL = 0.075;	// otherwise, try re-ordering LED's and choose lowest
                                                 // error that still satisfies the secondary error tolerance
+
+/// Flight data recording
+char blobFilename[] = "blobFile.txt";		// log file name for blob detection
+char imageSavepath[] = "TestImages";		// directory to save debug frames in
+char poseFilename[] = "poseFile.txt";		// log file name for pose estimates
+
+/// Used for blobfile
+FILE *bFile;
+
+/// Used for posefile
+FILE *pFile;
 
 
 #endif /* CONFIG_H_ */

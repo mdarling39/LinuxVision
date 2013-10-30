@@ -49,6 +49,9 @@ CustomBlobDetector::Params blobParams;  // Specifies feature detection criteria 
 Threshold thresh;   // Does feature detection (thresholding wrapper class for customBlobDetector)
 PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
 FPSCounter fps(15); // Computes real-time frame rate
+#if ARM
+        BBBSerial Serial;
+#endif
 /// ////////////////////////////////////// ///
 
 
@@ -80,14 +83,15 @@ int main()
     PnP.setModelPoints(modelPointsFilename);
     cout << "3-D model geometry read-in." << endl;
 
+    // Check that serial ports were initialized
 #if ARM
-        BBBSerial Serial;
-        cout << "Serial ports for BeagleBone Black initialized." << endl;
-#endif
+    // This is actually done above main() for global scope
+    cout << "Serial ports for BeagleBone Black initialized." << endl;
+#endif /* ARM */
 
     // Initialize any data recording specified by macros in Global.hpp
     initializeFlightDataRecorder();
-    cout << "Flight data recorder initialized." << endl;
+        cout << "Flight data recorder initialized." << endl;
 
     // (Camera initialization will occur in the "capture" thread)
 

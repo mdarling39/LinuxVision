@@ -34,6 +34,7 @@ fi
 
 set -x
 ${COMPILER}g++ ${FLAGS}  -pthread main_threaded.cpp CamObj.cpp FPSCounter.cpp\
- PnPObj.cpp  v4l2Cap.cpp -o main\
+ PnPObj.cpp  v4l2Cap.cpp Threshold.cpp customblobdetector.cpp\
+ BBBSerial.cpp -o main\
  `pkg-config --cflags --libs opencv libv4l2`
 set +x

@@ -5,6 +5,7 @@
 #include "Config.hpp"
 #include <opencv2/opencv.hpp>
 
+#include<stdio.h>
 
 /// Used for saving sample frames
 #include <sys/types.h>
