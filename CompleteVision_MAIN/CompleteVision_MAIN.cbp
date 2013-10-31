@@ -52,6 +52,8 @@
 		<Unit filename="../Global.hpp" />
 		<Unit filename="../KalmanFilter.cpp" />
 		<Unit filename="../KalmanFilter.hpp" />
+		<Unit filename="../LED_Detector.cpp" />
+		<Unit filename="../LED_Detector.hpp" />
 		<Unit filename="../OCVCapture.cpp" />
 		<Unit filename="../OCVCapture.h" />
 		<Unit filename="../PnPObj.cpp" />
@@ -61,11 +63,7 @@
 		<Unit filename="../Threshold.hpp" />
 		<Unit filename="../customblobdetector.cpp" />
 		<Unit filename="../customblobdetector.hpp" />
-		<Unit filename="../main_nonthreaded.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="../main_threaded.cpp" />
-		<Unit filename="../main_threaded_test.cpp" />
 		<Unit filename="../morph.hpp" />
 		<Unit filename="../neon_instructions.h" />
 		<Unit filename="../v4l2Cap.cpp" />

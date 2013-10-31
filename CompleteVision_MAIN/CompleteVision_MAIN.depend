@@ -61,12 +61,13 @@
 	<sys/types.h>
 	<sys/stat.h>
 
-1383097181 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
+1383098083 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
 	<iostream>
 
-1383097833 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
+1383200494 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
 	"v4l2_c.h"
-	"Threshold.hpp"
+	"LED_Detector.hpp"
+	<unistd.h>
 
 1382820177 /home/mdarling/Desktop/CompleteVision_MAIN/FPSCounter.hpp
 	<sys/time.h>
@@ -214,12 +215,12 @@
 	<opencv2/opencv.hpp>
 	"neon_instructions.h"
 
-1383097119 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+1383199463 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
 	"Global.hpp"
 	"Config.hpp"
 	"v4l2_c.h"
 	"FPSCounter.hpp"
-	"Threshold.hpp"
+	"LED_Detector.hpp"
 	"PnPObj.hpp"
 	"BBBSerial.h"
 	"FlightDataRecording.hpp"
@@ -230,7 +231,7 @@
 	<iterator>
 	<pthread.h>
 
-1383007182 /home/mdarling/Desktop/CompleteVision_MAIN/v4l2_c.h
+1383198902 /home/mdarling/Desktop/CompleteVision_MAIN/v4l2_c.h
 	<stdio.h>
 	<stdlib.h>
 	<signal.h>
@@ -261,4 +262,11 @@
 	<sys/types.h>
 	<sys/stat.h>
 	<ctime>
+
+1383192975 source:/home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.cpp
+	"LED_Detector.hpp"
+
+1383177284 /home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.hpp
+	<opencv2/opencv.hpp>
+	<vector>
 

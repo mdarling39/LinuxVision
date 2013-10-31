@@ -1,34 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="../CamObj.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../FPSCounter.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="259" topLine="9" />
-		</Cursor>
-	</File>
-	<File name="../customblobdetector.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5068" topLine="24" />
-		</Cursor>
-	</File>
-	<File name="../v4l2Cap.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8062" topLine="357" />
-		</Cursor>
-	</File>
-	<File name="../PnPObj.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="291" />
+			<Cursor1 position="173" topLine="6" />
 		</Cursor>
 	</File>
 	<File name="../Config.hpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2466" topLine="0" />
+			<Cursor1 position="1533" topLine="45" />
 		</Cursor>
 	</File>
-	<File name="../ProfilerTool.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../PnPObj.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="581" topLine="2" />
+			<Cursor1 position="2692" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="../v4l2Cap.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -36,19 +21,54 @@
 			<Cursor1 position="573" topLine="15" />
 		</Cursor>
 	</File>
-	<File name="../customblobdetector.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../FPSCounter.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2336" topLine="0" />
+			<Cursor1 position="139" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="../LED_Detector.hpp" open="1" top="1" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1354" topLine="33" />
+		</Cursor>
+	</File>
+	<File name="../LED_Detector.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="437" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="../FlightDataRecording.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="156" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="../BBBSerial.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1297" topLine="16" />
+		</Cursor>
+	</File>
+	<File name="../CamObj.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3629" topLine="157" />
 		</Cursor>
 	</File>
 	<File name="../v4l2_c.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2167" topLine="81" />
+			<Cursor1 position="759" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="../neon_instructions.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../Global.hpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2967" topLine="72" />
+			<Cursor1 position="389" topLine="12" />
+		</Cursor>
+	</File>
+	<File name="../CamObj.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1336" topLine="46" />
+		</Cursor>
+	</File>
+	<File name="../customblobdetector.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1749" topLine="27" />
 		</Cursor>
 	</File>
 	<File name="../morph.hpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -56,39 +76,49 @@
 			<Cursor1 position="444" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="../FPSCounter.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="445" topLine="6" />
-		</Cursor>
-	</File>
 	<File name="../Threshold.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="497" topLine="6" />
+			<Cursor1 position="674" topLine="9" />
 		</Cursor>
 	</File>
-	<File name="../main_threaded.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../v4l2Cap.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4449" topLine="155" />
+			<Cursor1 position="8062" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="../Global.hpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../customblobdetector.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="440" topLine="18" />
-		</Cursor>
-	</File>
-	<File name="../FPSCounter.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1013" topLine="29" />
+			<Cursor1 position="510" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="../Threshold.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="878" topLine="0" />
+			<Cursor1 position="214" topLine="4" />
 		</Cursor>
 	</File>
-	<File name="../CamObj.hpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../ProfilerTool.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1336" topLine="46" />
+			<Cursor1 position="113" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="../BBBSerial.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2301" topLine="90" />
+		</Cursor>
+	</File>
+	<File name="../PnPObj.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6795" topLine="319" />
+		</Cursor>
+	</File>
+	<File name="../main_threaded.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2225" topLine="51" />
+		</Cursor>
+	</File>
+	<File name="../neon_instructions.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2967" topLine="72" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

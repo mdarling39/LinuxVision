@@ -36,7 +36,6 @@ using namespace std;
 // Helper functions
 int xioctl(int fh, int request, void *arg);
 void errno_exit(const char *s);
-void set_parm(uint32_t control_id, int32_t control_value);
 
 enum io_method
 {
@@ -390,7 +389,7 @@ static void v4l2_init_device(struct v4l2Parms* parm)
     v4l2_init_mmap(parm);
 
     if (parm->customInitFcn != NULL)
-        parm->customInitFcn((void*)parm);
+            parm->customInitFcn((void*)parm);
 
 }
 
@@ -460,6 +459,49 @@ static void v4l2_open_device(struct v4l2Parms* parm)
         char msg[200];
         sprintf(msg,"Could not modify v4l2_control value given by flag: %X", control_id);
         if (0 != xioctl(fd,VIDIOC_S_CTRL,&control))
+        {
+            errno_exit(msg);
+        }
+    }
+
+    void set_manual_exposure(int fd, int32_t control_value)
+    {
+        struct v4l2_ext_control control[2];
+        control[0].id = V4L2_CID_EXPOSURE_AUTO;
+        control[0].value = V4L2_EXPOSURE_MANUAL;
+        control[1].id = V4L2_CID_EXPOSURE_ABSOLUTE;
+        control[1].value = control_value;
+
+        struct v4l2_ext_controls controls;
+        controls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+        controls.count = 2;
+        controls.controls = control;
+
+        char msg[200];
+        sprintf(msg,"Could not set manual exposure");
+        if (0 != xioctl(fd,VIDIOC_S_EXT_CTRLS,&controls))
+        {
+            errno_exit(msg);
+        }
+    }
+
+    void set_auto_exposure(int fd)
+        {
+        struct v4l2_ext_control control[2];
+        control[0].id = V4L2_CID_EXPOSURE_AUTO;
+        control[0].value = V4L2_EXPOSURE_APERTURE_PRIORITY;
+        control[1].id = V4L2_CID_EXPOSURE_AUTO_PRIORITY;
+        control[1].value = false;
+
+
+        struct v4l2_ext_controls controls;
+        controls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+        controls.count = 2;
+        controls.controls = control;
+
+        char msg[200];
+        sprintf(msg,"Could not set auto exposure");
+        if (0 != xioctl(fd,VIDIOC_S_EXT_CTRLS,&controls))
         {
             errno_exit(msg);
         }

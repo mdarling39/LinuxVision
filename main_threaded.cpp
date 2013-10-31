@@ -3,7 +3,7 @@
 #include "Config.hpp"
 #include "v4l2_c.h"  // C-friendly version of CamObj.hpp so we can do multithreading
 #include "FPSCounter.hpp"
-#include "Threshold.hpp"
+#include "LED_Detector.hpp"
 #include "PnPObj.hpp"
 #include "BBBSerial.h"
 #include "FlightDataRecording.hpp"
@@ -45,8 +45,8 @@ vector <double> reportState(6,NAN); // contains the previous "good" state
 double poseErr;
 
 // User-defined class objects
-CustomBlobDetector::Params blobParams;  // Specifies feature detection criteria (modified in Config.hpp)
-Threshold thresh;   // Does feature detection (thresholding wrapper class for customBlobDetector)
+LED_Detector::Params DetectorParams;
+LED_Detector Detector;
 PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
 FPSCounter fps(15); // Computes real-time frame rate
 #if ARM
@@ -71,7 +71,7 @@ int main()
     selfIdentifySystem();
 
     // Initialize threshold object
-    initializeThresholdObj(thresh, blobParams);
+    initializeFeatureDetectObj(DetectorParams);
     cout << "Feature detector initialized." << endl;
 
     // Read camera intrinsic properties
@@ -141,6 +141,10 @@ void *capture(void*)
         v4l2_fill_buffer(&parms, &buf, &user_buffer.ptr[buf.index]);
         v4l2_queue_buffer(&parms, &buf);
     }
+
+    // make final attempt at setting the camera's parameters
+    custom_v4l2_init(&parms);
+
     cout << "Camera initialized and capturing." << endl;
 
         // Initialize and flight recording tools
@@ -190,24 +194,17 @@ while(1)
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
     pthread_mutex_unlock(&framelock_mutex);
 
-    // Extract the red channel and save as gray image
-    const int mixCh[]= {2,0};
-    mixChannels(&frame,1,&gray,1,mixCh,1);
-    //gray = gray.clone();  // (uncomment to force a hard copy of image buffer)
-
-    // Detect feature points
-    thresh.set_image(gray);
-
-    /// TODO: Not sure where binary image gets set -- what if I want to dilate before detect_blobs()?
     /*
-    /// Optional dilation
+    /// Dilation example
     cv::Mat kernel(5,5,CV_8UC1,Scalar(0));
     cv::circle(kernel,Point(2,2),2,Scalar(255));
     dilate(binary,binary,kernel);
     */
 
-    thresh.detect_blobs();
-    vector<Point2f> imagePoints = thresh.get_points();
+    vector<Point2f> imagePoints;
+    Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams);
+    continue;
+
 
     // Compute pose estimate
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
