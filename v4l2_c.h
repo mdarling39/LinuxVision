@@ -493,7 +493,6 @@ static void v4l2_open_device(struct v4l2Parms* parm)
         control[1].id = V4L2_CID_EXPOSURE_AUTO_PRIORITY;
         control[1].value = false;
 
-
         struct v4l2_ext_controls controls;
         controls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
         controls.count = 2;
@@ -505,6 +504,7 @@ static void v4l2_open_device(struct v4l2Parms* parm)
         {
             errno_exit(msg);
         }
+
     }
 
 #endif // V4L2_C_H_INCLUDED

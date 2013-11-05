@@ -185,6 +185,7 @@ void *capture(void*)
 void *processing(void*)
 {
 sleep(3); // Ensure that the capture thread has time to initialize and fill buffer
+PnP.is_current = false;
 while(1)
 {
 
@@ -194,24 +195,17 @@ while(1)
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
     pthread_mutex_unlock(&framelock_mutex);
 
-    /*
-    /// Dilation example
-    cv::Mat kernel(5,5,CV_8UC1,Scalar(0));
-    cv::circle(kernel,Point(2,2),2,Scalar(255));
-    dilate(binary,binary,kernel);
-    */
 
     vector<Point2f> imagePoints;
-    Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams);
-    continue;
-
+    bool preCorrelated =
+        Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
-    if (poseIters > 0)
+    if ( poseIters > 0 && checkSanity(poseState)>0 )
     {
-        PnP.is_current = true;
-        reportState = poseState;
+            PnP.is_current = true;
+            reportState = poseState;
     } else {
         PnP.is_current = false;
     }
@@ -244,11 +238,11 @@ while(1)
 
 #ifdef DEBUG_VIDEO
         // print blobs on image (green)
-		thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
+		//thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
 
 		// print the 5 "most probable" blobs on image (blue)
 		if (imagePoints.size() > 0) {
-			for (int i = 0; i < NO_LEDS; i++) {
+			for (int i = 0; i < imagePoints.size(); i++) {
 				cv::circle(frame,imagePoints[i], 5, cv::Scalar(255,0,0), 3);
 			}
 		}

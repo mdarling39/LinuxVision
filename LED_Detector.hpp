@@ -1,8 +1,13 @@
 #ifndef LED_DETECTOR_HPP_INCLUDED
 #define LED_DETECTOR_HPP_INCLUDED
 
+//#define LED_DETECTOR_DEBUG
+
+#include "Global.hpp"
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <algorithm> // sort, min
+#include <stdio.h>
 
 using namespace std;
 using namespace cv;
@@ -16,18 +21,13 @@ struct Params
     // Default initial values are defined here.
     // Values can be modified as needed using public access
 
-
-    unsigned char w_Circularity;
-    unsigned char w_InertiaRatio;
-    unsigned char w_Convexity;
-    unsigned char w_BlobColor;
-
-    int maxPoints;
     float threshold;
-    float minDistBetweenBlobs;
+    int maxBlobs;
 
+    bool sortByColor;
     bool filterByColor;
-    unsigned char targetBlobColor;
+    float maxColor;     // maximum delta from target color
+    float targetColor;
 
     bool filterByArea;
     float minArea;
@@ -38,21 +38,12 @@ struct Params
     float maxCircularity;
     float targetCircularity;
 
-    bool filterByInertia;
-    float minInertiaRatio;
-    float maxInertiaRatio;
-    float targetInertiaRatio;
+    bool filterByAspectRatio;
+    float minAspectRatio;
+    float maxAspectRatio;
 
-    bool filterByConvexity;
-    float minConvexity;
-    float maxConvexity;
-    float targetConvexity;
-
-    bool filterByError;
-    float maxError;
+    int localRadius;    // radius around previous point in percent span
 };
-
-protected:
 
     // structure objects to hold information about detected features
 
@@ -62,27 +53,36 @@ protected:
     };
 
 	struct contourStructObj {
-		Point2d center;
+		Point2f center;
+		float radius;
         float color;
+        float color_delta;
         float area;
         float circularity;
-        float inertiaRatio;
-        float convexity;
-        float error;
-
-		/// I might have messed this up -- worry about sorting later
-		/*
-		const bool operator < (const contourStructObj &contours) const {
-			return (error < contours.error);
-		}
-		*/
+        float aspectRatio;
 	};
 
+	static bool sortByColor(const contourStructObj &a, const contourStructObj &b)
+	{
+        return a.color_delta < b.color_delta;
+	}
+
+
 private:
+
+    struct proximity
+    {
+        Point2f center;
+        float radius;
+    };
+    vector<proximity> proximityVec;
+    float span;
 
 
 public:
 void findLEDs(const cv::Mat&, cv::Mat&, cv::Mat&, vector<Point2f>&, const Params&);
+bool findLEDs(const cv::Mat&, cv::Mat&, cv::Mat&, vector<Point2f>&, const Params&,
+    bool, const vector<Point2f>&);
 
 
 };

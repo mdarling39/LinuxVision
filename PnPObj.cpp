@@ -300,7 +300,7 @@ void PnPObj::solve() {
 // localize UAV by finding the best possible pose
 // (returns 6-DOF state (dx,dy,dz,dphi,dtheta,dpsi) in units of (in,in,in,deg,deg,deg)
 int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vector<double> &poseState, double &poseErr,
-		const int max_swaps, const double perrTol, const double serrTol) {
+		const int max_swaps, const double perrTol, const double serrTol, const bool skipCorrelation) {
 
 	// Create a backup of the last good PnP object. --> use this if no "good" pose is found
 	PnPObj PnPObj_last_good(*this);
@@ -329,7 +329,8 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 				// swapImagePoints output to PnPObj::imagePoints member
 
 				// loop through 3 possible re-correlation schemes between 3-D geometry and image points
-				PnPObj::correlatePoints(i);
+				if (!skipCorrelation)
+                    PnPObj::correlatePoints(i);
 
 				PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
 
@@ -353,6 +354,8 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 					error_buff.push_back(scaledReprojErr);
 					PnPObj_buff.push_back(*this); // append this instance of PnPObj to buffer
 				}
+                if (skipCorrelation)  //only go through one iteration if we are providing image pts in order
+                    break;
 			}
 		}
 

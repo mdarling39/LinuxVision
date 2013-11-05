@@ -30,7 +30,7 @@ class PnPObj {
 
 	// 2-D image points and reprojected image points
 	std::vector<cv::Point2f> imagePoints;
-	std::vector<cv::Point2f> projImagePoints, projAxesPoints;
+	std::vector<cv::Point2f> projAxesPoints;
 
 	// Camera parameters
 	cv::Mat cameraMatrix, distCoeffs;
@@ -59,6 +59,7 @@ class PnPObj {
 public:
 
 	bool is_current;  // helper variable to use as a flag of whether or not the state is current
+	std::vector<cv::Point2f> projImagePoints;
 
 
 	// constructors
@@ -99,7 +100,7 @@ public:
 
 	// localize UAV by finding best pose estimate
 	int localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vector<double> &poseState, double &poseErr,
-			const int max_swaps, const double perrTol, const double serrTol);
+			const int max_swaps, const double perrTol, const double serrTol, const bool skipCorrelation=false);
 
 	// project all points
 	void projectAll();
