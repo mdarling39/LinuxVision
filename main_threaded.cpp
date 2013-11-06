@@ -202,7 +202,7 @@ while(1)
 
     // Compute pose estimate
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
-    if ( poseIters > 0 && checkSanity(poseState)>0 )
+    if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
             reportState = poseState;
@@ -213,7 +213,7 @@ while(1)
 
     // send pose estimate to autopilot
 #if ARM
-    Serial.writeData(poseState);
+        Serial.writeData(poseState);
 #endif
 
 
@@ -272,10 +272,9 @@ std::cout << "System is:   ";
     std::cerr << "OSX -- no longer supported" << std::endl;
 #elif LINUX
     std::cout << "LINUX" << std::endl;
+#elif ARM
+    std::cout << "ARM" << std::endl;
 #else
     std::cerr << "Unknown System!" << std::endl;
-#endif
-#if ARM
-    std::cout << "ARM" << std::endl;
 #endif
 }

@@ -126,14 +126,20 @@ bool checkSanity(const vector<double> &poseState)
 /// Camera intrinisics and 3-D model geometry
 // path to intrinsic camera properties
 const std::string camDataFilename =
-		"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
-		//"/home/ubuntu/Vision/multithreading/Calibration/C920-640x480_IntrinsicParams.yml";
+#if ARM
+    "/home/ubuntu/Vision/multithreading/Calibration/C920-640x480_IntrinsicParams.yml";
+#else
+    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
+#endif
 
 
 // path to 3-D model geometry file
 const char* modelPointsFilename =
-		"/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Glider_Geom.txt";
-		//"/home/ubuntu/Vision/multithreading/Calibration/Glider_Geom.txt";
+#if ARM
+    "/home/ubuntu/Vision/multithreading/Calibration/Glider_Geom.txt";
+#else
+    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Glider_Geom.txt";
+#endif
 
 
 /// Pose estimate error tolerances

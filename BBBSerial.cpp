@@ -152,9 +152,13 @@ int BBBSerial::checkRequest()
 
 	if (BBBSerial::readBytes(msg)) {
 		if (msg == 'H')
+		{
+            // flush the rest of the input
+            while(BBBSerial::readBytes(msg)){};
 			return 1;
-		else
+        } else {
 			return 0;
+        }
 	} else {
 		return -1;
 	}
