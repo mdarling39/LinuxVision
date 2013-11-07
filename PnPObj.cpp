@@ -475,7 +475,10 @@ void PnPObj::drawOverFrame(cv::Mat &src) {
 					B_tvec.at<double>(2,0)*MM2IN);
 
 			sprintf(stateText2,"phi: %8.2f  theta: %8.2f  psi: %8.2f",phi*RAD2DEG,theta*RAD2DEG,psi*RAD2DEG);
-			sprintf(errText,"Reproj. Err: %10.6f", scaledReprojErr);
+			if (is_current)
+                sprintf(errText,"Reproj. Err: %10.6f", scaledReprojErr);
+            else
+                sprintf(errText,"Reproj. Err: %10.6f", NAN);
 		}
 	} else {
 		sprintf(stateText1," dx: %8.2f    dy: %8.2f   dz: %8.2f",

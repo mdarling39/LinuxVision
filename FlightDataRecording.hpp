@@ -55,9 +55,13 @@ void saveDebugFrame(cv::Mat &frame, char* path)
 
     if (elapsed > frameSkip_ms)
     {
-        std::stringstream filename;
-        filename << path << "/frame_" << (int)frameCounter << ".jpg";
-        imwrite(filename.str(), frame);
+//        std::stringstream filename;
+//        filename << path << "/frame_" << (int)frameCounter << ".jpg";
+//        imwrite(filename.str(), frame);
+        char filename[500];
+        sprintf(filename,"%s/frame_%04d.jpg",path,(int)frameCounter);
+        imwrite(filename, frame);
+
 
         frameCounter++;
         last = now;

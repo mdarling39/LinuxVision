@@ -190,6 +190,7 @@ while(1)
 {
 
     /// TODO:  Include some kind of protection to make sure we don't repeatedly process the same frame
+    /// (if processing somehow goes faster than capturing -- not a problem on BBB right now)
     pthread_mutex_lock(&framelock_mutex);
     // Decode JPEG image stored in the most recently dequeued buffer
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
@@ -201,7 +202,7 @@ while(1)
         Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
-    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL);
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
@@ -241,17 +242,23 @@ while(1)
 		//thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
 
 		// print the 5 "most probable" blobs on image (blue)
+		/*
 		if (imagePoints.size() > 0) {
 			for (int i = 0; i < imagePoints.size(); i++) {
 				cv::circle(frame,imagePoints[i], 5, cv::Scalar(255,0,0), 3);
 			}
 		}
+		*/
 
 		PnP.drawOverFrame(frame);
 		imshow("DEBUG_VIDEO",frame);
 		waitKey(1);
 #endif /* DEBUG_VIDEO */
 
+
+#if defined(SAVEOFF_FRAMES) && !defined(DEBUG_VIDEO) // don't repeat this step
+    PnP.drawOverFrame(frame);
+#endif
 #ifdef SAVEOFF_FRAMES
     saveDebugFrame(frame, imageSavepath);
 #endif /* SAVEOFF_FRAMES */

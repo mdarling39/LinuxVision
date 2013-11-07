@@ -148,8 +148,13 @@ const double SECONDARY_POSE_ERR_TOL = 0.050;	// otherwise, try re-ordering LED's
                                                 // error that still satisfies the secondary error tolerance
 
 /// Flight data recording
-char imageSavepath[] = "TestImages";		// directory to save debug frames in
-unsigned int frameSkip_ms = 2000;           // Sets how often to save an image (in milliseconds)
+char imageSavepath[] =
+#if ARM
+    "/media/microSD/TestImages";
+#else
+    "TestImages";		// directory to save debug frames in
+#endif
+unsigned int frameSkip_ms = 1000;  // Sets how often to save an image (in milliseconds)
 
 
 

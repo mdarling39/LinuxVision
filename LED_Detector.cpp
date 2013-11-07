@@ -229,9 +229,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
     #endif /* LED_DETECTOR_DEBUG */
 
     if (havePreviousState)
-        return 1;
+        return true;
     else
-        return -1;
+        return false;
 }
 
 
