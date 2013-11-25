@@ -19,7 +19,9 @@ BBBSerial::BBBSerial()
 	// mount /dev/mmcblk0p1 /mnt/boot
 	// nano /mnt/boot/uEnv.txt
 	// #add this to the end of the single line of uEnv.txt:
-	// capemgr.enable_partno=BB-UART1
+	//#Enable UART1 on Boot
+    //optargs=capemgr.enable_partno=BB-UART1
+
 
 	// Initialize header message, checksum, and payload length members
 	hdr[0] = 'D';

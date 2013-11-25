@@ -11,6 +11,9 @@
 #include "LED_Detector.hpp"    // for definition of Threshold class
 #include <unistd.h>
 
+#define INDOOR
+
+
 /// Camera settings
 #if ARM
 const int DEVICE = 0;
@@ -33,19 +36,23 @@ void custom_v4l2_init(void* parm_void)
 
     struct v4l2Parms* parm = (struct v4l2Parms*) parm_void;
 
-    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);    // Turn autofocus off
+    set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);      // Turn autofocus off
     set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
     set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
-    set_parm(parm->fd, V4L2_CID_SATURATION,170);      // Adjust Saturation (0-255)
+    set_parm(parm->fd, V4L2_CID_SATURATION,170);        // Adjust Saturation (0-255)
     set_parm(parm->fd, V4L2_CID_SHARPNESS,128);         // Blur the image to get smoother contours (0-255)
 
     //set_auto_exposure(parm->fd);
 
-    set_manual_exposure(parm->fd, 200);  // Indoor exposure
+#ifdef INDOOR
+    set_manual_exposure(parm->fd, 20);  // Indoor exposure
     set_parm(parm->fd, V4L2_CID_GAIN, 255); // Indoor gain
+#endif
 
-    //set_manual_exposure(parm->fd, 3); // Outdoor exposure (4 to 2046)
-    //set_parm(parm->fd, V4L2_CID_GAIN, 20); // Outdoor gain
+#ifdef OUTDOOR
+    set_manual_exposure(parm->fd, 3); // Outdoor exposure (4 to 2046)
+    set_parm(parm->fd, V4L2_CID_GAIN, 20); // Outdoor gain
+#endif
 
     set_parm(parm->fd, V4L2_CID_BRIGHTNESS, 128);
     set_parm(parm->fd, V4L2_CID_CONTRAST, 128);
@@ -57,42 +64,20 @@ void custom_v4l2_init(void* parm_void)
 /// Threshold object initialization function
 void initializeFeatureDetectObj(LED_Detector::Params &params)
 {
+
+#ifdef INDOOR
     /// Good indoor variables
-    params.threshold =             200;
+    params.threshold =             180;
     params.maxBlobs =              8;
 
     params.sortByColor =           true;
-    params.targetColor =           320;   // Red-ish
-    params.filterByColor =         true;
-    params.maxColor =              90;
-
-    params.filterByArea =          true;
-    params.minArea =               3;
-    params.maxArea =               300;
-
-    params.filterByCircularity =   false;
-    params.minCircularity =        0.4;
-    params.maxCircularity =        1.1;
-
-    params.filterByAspectRatio =   false;
-    params.minAspectRatio =        0.3;
-    params.maxAspectRatio =        1.1;
-
-    params.localRadius =           10;
-
-    /// Good outdoor vairables
-    /*
-    params.threshold =             200;
-    params.maxBlobs =              8;
-
-    params.sortByColor =           true;
-    params.targetColor =           320;   // Red-ish
+    params.targetColor =           330;   // Red-ish
     params.filterByColor =         true;
     params.maxColor =              75;
 
     params.filterByArea =          true;
-    params.minArea =               3;
-    params.maxArea =               500;
+    params.minArea =               2;
+    params.maxArea =               800;
 
     params.filterByCircularity =   false;
     params.minCircularity =        0.4;
@@ -102,8 +87,33 @@ void initializeFeatureDetectObj(LED_Detector::Params &params)
     params.minAspectRatio =        0.4;
     params.maxAspectRatio =        1.1;
 
-    params.localRadius =           10;
-    */
+    params.localRadius =           20;
+#endif
+
+#ifdef OUTDOOR
+    /// Good outdoor vairables
+    params.threshold =             130;
+    params.maxBlobs =              8;
+
+    params.sortByColor =           true;
+    params.targetColor =           330;   // Red-ish
+    params.filterByColor =         true;
+    params.maxColor =              75;
+
+    params.filterByArea =          true;
+    params.minArea =               2;
+    params.maxArea =               800;
+
+    params.filterByCircularity =   false;
+    params.minCircularity =        0.4;
+    params.maxCircularity =        1.1;
+
+    params.filterByAspectRatio =   false;
+    params.minAspectRatio =        0.4;
+    params.maxAspectRatio =        1.1;
+
+    params.localRadius =           20;
+#endif
 }
 
 
@@ -127,7 +137,7 @@ bool checkSanity(const vector<double> &poseState)
 // path to intrinsic camera properties
 const std::string camDataFilename =
 #if ARM
-    "/home/ubuntu/Vision/multithreading/Calibration/C920-640x480_IntrinsicParams.yml";
+    "/home/ubuntu/Vision/Calibration/C920-640x480_IntrinsicParams.yml";
 #else
     "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
 #endif
@@ -136,21 +146,21 @@ const std::string camDataFilename =
 // path to 3-D model geometry file
 const char* modelPointsFilename =
 #if ARM
-    "/home/ubuntu/Vision/multithreading/Calibration/Glider_Geom.txt";
+    "/home/ubuntu/Vision/Calibration/Glider_Geom.txt";
 #else
-    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Glider_Geom.txt";
+    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Penguin_Geom.txt";
 #endif
 
 
 /// Pose estimate error tolerances
-const double POSE_ERR_TOL = 0.030;				// if reprojection error is lower than this --> move on
-const double SECONDARY_POSE_ERR_TOL = 0.050;	// otherwise, try re-ordering LED's and choose lowest
+const double POSE_ERR_TOL = 0.05;				// if reprojection error is lower than this --> move on
+const double SECONDARY_POSE_ERR_TOL = 0.08;	// otherwise, try re-ordering LED's and choose lowest
                                                 // error that still satisfies the secondary error tolerance
 
 /// Flight data recording
 char imageSavepath[] =
 #if ARM
-    "/media/microSD/TestImages";
+    "/media/ubuntu/microSD/TestImages";
 #else
     "TestImages";		// directory to save debug frames in
 #endif

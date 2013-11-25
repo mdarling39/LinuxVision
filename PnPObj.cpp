@@ -287,7 +287,6 @@ void PnPObj::solve() {
 	cv::solvePnP(modelPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec, 1, CV_EPNP);
 
 	// compute Euler angles and compute B_rotMat
-
 	PnPObj::computeEuler();
 
 	// reproject points and compute reprojection error
@@ -333,7 +332,6 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
                     PnPObj::correlatePoints(i);
 
 				PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
-
 
 				if (scaledReprojErr < perrTol){
 					poseErr = scaledReprojErr;
@@ -420,7 +418,7 @@ void PnPObj::scaledReprojError() {
 	}
 
 	double maxVal = *std::max_element(distances.begin<double>(),distances.end<double>());
-	scaledReprojErr = sum/(maxVal);
+	scaledReprojErr = (sum)/(maxVal);
 
 }
 

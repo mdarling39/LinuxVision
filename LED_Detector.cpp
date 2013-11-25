@@ -21,6 +21,7 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
 
     // threshold the gray image
     threshold(grayImage, binaryImage, params.threshold, 255, THRESH_BINARY);
+    imshow("binary",binaryImage);
 
     // detect contours -- use CV_RETR_EXTERNAL to avoid returning holes
     vector<vector<Point> > contours;
@@ -98,10 +99,10 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
         // compute the average RGB color of the blob
         if (params.sortByColor || params.filterByColor)
         {
-            static unsigned int R,G,B;
-            static Mat RGB(1,1,CV_32FC3);
-            static Mat HSV(1,1,CV_32FC3);
-            static unsigned int n=0;
+            unsigned int R,G,B;
+            Mat RGB(1,1,CV_32FC3);
+            Mat HSV(1,1,CV_32FC3);
+            unsigned int n=0;
             R = G = B = 0;
 
             // get the bounding rectangle
@@ -111,7 +112,7 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
             for (int y=roi.y; y<roi.y + roi.height; y++){
                 for(int x=roi.x; x< roi.x + roi.width; x++){
                     // Check if point lies inside contour
-                    if (pointPolygonTest(contours[contourIdx], Point2f(x,y),false) > 0){
+                    if (pointPolygonTest(contours[contourIdx], Point2f(x,y),false) >= 0){
                         B += RGBImage.at<Vec3b>(y,x)[0];
                         G += RGBImage.at<Vec3b>(y,x)[1];
                         R += RGBImage.at<Vec3b>(y,x)[2];
@@ -143,7 +144,6 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
                 if ( contourStruct.color_delta > params.maxColor )
                     continue;
             }
-
 
             if (havePreviousState)
             {

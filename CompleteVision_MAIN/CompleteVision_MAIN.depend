@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1383702794 source:/home/mdarling/Desktop/CompleteVision_MAIN/BBBSerial.cpp
+1384236320 source:/home/mdarling/Desktop/CompleteVision_MAIN/BBBSerial.cpp
 	"BBBSerial.h"
 	<iostream>
 
@@ -61,10 +61,10 @@
 	<sys/types.h>
 	<sys/stat.h>
 
-1383856893 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
+1385352724 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
 	<iostream>
 
-1383857440 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
+1385360175 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
 	"v4l2_c.h"
 	"LED_Detector.hpp"
 	<unistd.h>
@@ -152,7 +152,7 @@
 	<vector>
 	<string>
 
-1383858377 source:/home/mdarling/Desktop/CompleteVision_MAIN/PnPObj.cpp
+1385359483 source:/home/mdarling/Desktop/CompleteVision_MAIN/PnPObj.cpp
 	"PnPObj.hpp"
 
 1381786430 source:/home/mdarling/Desktop/CompleteVision_MAIN/serialCommBeagle.cpp
@@ -215,7 +215,7 @@
 	<opencv2/opencv.hpp>
 	"neon_instructions.h"
 
-1383858311 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+1385343495 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
 	"Global.hpp"
 	"Config.hpp"
 	"v4l2_c.h"
@@ -253,7 +253,7 @@
 	"opencv2/highgui/highgui_c.h"
 	"opencv2/opencv.hpp"
 
-1383858640 /home/mdarling/Desktop/CompleteVision_MAIN/FlightDataRecording.hpp
+1385337195 /home/mdarling/Desktop/CompleteVision_MAIN/FlightDataRecording.hpp
 	"Global.hpp"
 	"Config.hpp"
 	<opencv2/opencv.hpp>
@@ -263,13 +263,29 @@
 	<sys/stat.h>
 	<ctime>
 
-1383858425 source:/home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.cpp
+1385352888 source:/home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.cpp
 	"LED_Detector.hpp"
 
-1383619272 /home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.hpp
+1385346777 /home/mdarling/Desktop/CompleteVision_MAIN/LED_Detector.hpp
 	"Global.hpp"
 	<opencv2/opencv.hpp>
 	<vector>
 	<algorithm>
 	<stdio.h>
+
+1385350921 source:/home/mdarling/Desktop/CompleteVision_MAIN/FeatureDetector_Test.cpp
+	"Global.hpp"
+	"Config.hpp"
+	"v4l2_c.h"
+	"FPSCounter.hpp"
+	"LED_Detector.hpp"
+	"PnPObj.hpp"
+	"BBBSerial.h"
+	"FlightDataRecording.hpp"
+	"ProfilerTool.h"
+	<opencv2/opencv.hpp>
+	<vector>
+	<iostream>
+	<iterator>
+	<pthread.h>
 

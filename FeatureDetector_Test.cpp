@@ -161,6 +161,7 @@ void *capture(void*)
     //  Capture frames indefinitely
     while(1)
     {
+    /*
         if ( 0 != v4l2_wait_for_data(&parms))   // calls select() -- waits for data to be ready
             continue;                           // retry on EAGAIN
 
@@ -171,6 +172,7 @@ void *capture(void*)
         v4l2_queue_buffer(&parms, &buf);
         pthread_cond_broadcast(&done_saving_frame);
         pthread_mutex_unlock(&framelock_mutex);
+        */
     }
 
     v4l2_stop_capturing(&parms);
@@ -193,7 +195,11 @@ while(1)
     /// (if processing somehow goes faster than capturing -- not a problem on BBB right now)
     pthread_mutex_lock(&framelock_mutex);
     // Decode JPEG image stored in the most recently dequeued buffer
-    v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
+    //v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
+    frame = imread("/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN/TestImages_OLD/frame_0032.jpg");
+    Mat roi = frame(Range(400,475),Range(5,450));
+    roi.setTo(Scalar(255,0,0));
+
     pthread_mutex_unlock(&framelock_mutex);
 
 
@@ -202,7 +208,7 @@ while(1)
         Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
-    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL); //, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
@@ -249,6 +255,14 @@ while(1)
 			}
 		}
 		*/
+
+        if (imagePoints.size() > 0)
+        {
+            for (int i = 0; i < imagePoints.size(); i++)
+            {
+                cv::circle(frame,imagePoints[i], 3, cv::Scalar(0,255,0), 3);
+            }
+        }
 
 		PnP.drawOverFrame(frame);
 		imshow("DEBUG_VIDEO",frame);
