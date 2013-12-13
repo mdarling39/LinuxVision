@@ -1,13 +1,15 @@
 #ifndef LED_DETECTOR_HPP_INCLUDED
 #define LED_DETECTOR_HPP_INCLUDED
 
-//#define LED_DETECTOR_DEBUG
+//#define LED_DETECTOR_DEBUG  //(I don't think this works anymore)
+//#define SHOW_BINARY_IMG
 
 #include "Global.hpp"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <algorithm> // sort, min
 #include <stdio.h>
+extern cv::Mat frame;
 
 using namespace std;
 using namespace cv;
@@ -74,8 +76,32 @@ private:
     {
         Point2f center;
         float radius;
+        bool isDuplicate;
+        bool delete_me;
+        bool operator < (const proximity& b) const
+        {
+            return (radius < b.radius);
+        }
+        proximity()
+        {
+            center = Point2f();
+            radius = 0;
+            isDuplicate = false;
+            delete_me = false;
+        }
     };
-    vector<proximity> proximityVec;
+
+    static bool samePoint(const proximity &a, const proximity &b)
+    {
+        return (a.center == b.center);
+    }
+
+    static bool compByRadius(const proximity* a, const proximity* b)
+    {
+        return (a->radius < b->radius);
+    }
+
+    vector<vector<proximity> > proximityVec;
     float span;
 
 
@@ -86,4 +112,6 @@ bool findLEDs(const cv::Mat&, cv::Mat&, cv::Mat&, vector<Point2f>&, const Params
 
 
 };
+
+
 #endif // LED_DETECTOR_HPP_INCLUDED

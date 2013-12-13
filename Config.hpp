@@ -11,7 +11,7 @@
 #include "LED_Detector.hpp"    // for definition of Threshold class
 #include <unistd.h>
 
-#define INDOOR
+#define OUTDOOR  //OUTDOOR //INDOOR // AUTO
 
 
 /// Camera settings
@@ -38,11 +38,10 @@ void custom_v4l2_init(void* parm_void)
 
     set_parm(parm->fd, V4L2_CID_C920_AUTOFOCUS,0);      // Turn autofocus off
     set_parm(parm->fd, V4L2_CID_C920_FOCUSVAL,V4L2_C920_FOCUS_INF);   // Use infinity focus (no macro)
-    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,0);      // Wide angle zoom
+    set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,107);      // Zoom (trying to match PS3 Eye)
+    //set_parm(parm->fd, V4L2_CID_C920_ZOOMVAL,150);
     set_parm(parm->fd, V4L2_CID_SATURATION,170);        // Adjust Saturation (0-255)
     set_parm(parm->fd, V4L2_CID_SHARPNESS,128);         // Blur the image to get smoother contours (0-255)
-
-    //set_auto_exposure(parm->fd);
 
 #ifdef INDOOR
     set_manual_exposure(parm->fd, 20);  // Indoor exposure
@@ -54,9 +53,12 @@ void custom_v4l2_init(void* parm_void)
     set_parm(parm->fd, V4L2_CID_GAIN, 20); // Outdoor gain
 #endif
 
+#ifdef AUTO
+    set_auto_exposure(parm->fd);
+#endif
+
     set_parm(parm->fd, V4L2_CID_BRIGHTNESS, 128);
     set_parm(parm->fd, V4L2_CID_CONTRAST, 128);
-
 }
 
 
@@ -96,7 +98,7 @@ void initializeFeatureDetectObj(LED_Detector::Params &params)
     params.maxBlobs =              8;
 
     params.sortByColor =           true;
-    params.targetColor =           330;   // Red-ish
+    params.targetColor =           320;   // Red-ish
     params.filterByColor =         true;
     params.maxColor =              75;
 
@@ -154,7 +156,7 @@ const char* modelPointsFilename =
 
 /// Pose estimate error tolerances
 const double POSE_ERR_TOL = 0.05;				// if reprojection error is lower than this --> move on
-const double SECONDARY_POSE_ERR_TOL = 0.08;	// otherwise, try re-ordering LED's and choose lowest
+const double SECONDARY_POSE_ERR_TOL = 0.30;	// otherwise, try re-ordering LED's and choose lowest
                                                 // error that still satisfies the secondary error tolerance
 
 /// Flight data recording

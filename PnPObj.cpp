@@ -210,37 +210,63 @@ bool PnPObj::swapImagePoints(std::vector<cv::Point2f> imagePoints_IN, std::vecto
 	}
 
 	std::vector<cv::Point2f>::iterator last_pt = imagePoints_IN.begin() + (NO_LEDS-1);
+    bool np1, np2, np3;
+    np1 = np2 = np3 = false;
+    if (imagePoints_IN.size() >= NO_LEDS+1){
+        np1 = true;
+        if (imagePoints_IN.size() >= NO_LEDS+2){
+            np2 = true;
+            if (imagePoints_IN.size() >= NO_LEDS+3){
+                np3 = true;
+            }
+        }
+    }
 
 	switch (num){
 	case 0:  // do nothing
 		break;
 	case 1:  // swap 5 & 6
-		if (imagePoints_IN.size() < NO_LEDS+1)
+		if (!np1)
 			return false;
 		std::iter_swap(last_pt,last_pt+1);
 		break;
 	case 2:  // swap 5 & 7
-		if (imagePoints_IN.size() < NO_LEDS+2)
+		if (!np2)
 			return false;
 		std::iter_swap(last_pt,last_pt+2);
 		break;
 	case 3:  // swap 4 & 6
-		if (imagePoints_IN.size() < NO_LEDS+1)
+		if (!np1)
 			return false;
 		std::iter_swap(last_pt-1,last_pt+1);
 		break;
-	case 4: // swap 4 & 7
-		if (imagePoints_IN.size() < NO_LEDS+2)
+    case 4: // swap 3 & 6
+        if (!np1)
+            return false;
+        std::iter_swap(last_pt-2,last_pt+1);
+        break;
+    case 5: // swap 2 & 6
+        if (!np1)
+            return false;
+        std::iter_swap(last_pt-3,last_pt+1);
+        break;
+    case 6: // swap 1 & 6
+        if (!np1)
+            return false;
+        std::iter_swap(last_pt-4,last_pt+1);
+        break;
+	case 7: // swap 4 & 7
+		if (!np2)
 			return false;
 		std::iter_swap(last_pt-1,last_pt+2);
 		break;
-	case 5: // swap 5 & 8
-		if (imagePoints_IN.size() < NO_LEDS+3)
+	case 8: // swap 5 & 8
+		if (!np3)
 			return false;
 		std::iter_swap(last_pt,last_pt+3);
 		break;
-	case 6: // swap 4 & 8
-		if (imagePoints_IN.size() < NO_LEDS+3)
+	case 9: // swap 4 & 8
+		if (!np3)
 			return false;
 		std::iter_swap(last_pt-1,last_pt+3);
 		break;

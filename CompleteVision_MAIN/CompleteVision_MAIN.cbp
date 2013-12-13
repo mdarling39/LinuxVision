@@ -48,6 +48,7 @@
 		<Unit filename="../Config.hpp" />
 		<Unit filename="../FPSCounter.cpp" />
 		<Unit filename="../FPSCounter.hpp" />
+		<Unit filename="../FeatureDetector_Test.cpp" />
 		<Unit filename="../FlightDataRecording.hpp" />
 		<Unit filename="../Global.hpp" />
 		<Unit filename="../KalmanFilter.cpp" />
@@ -63,7 +64,6 @@
 		<Unit filename="../Threshold.hpp" />
 		<Unit filename="../customblobdetector.cpp" />
 		<Unit filename="../customblobdetector.hpp" />
-		<Unit filename="../main_threaded.cpp" />
 		<Unit filename="../morph.hpp" />
 		<Unit filename="../neon_instructions.h" />
 		<Unit filename="../v4l2Cap.cpp" />

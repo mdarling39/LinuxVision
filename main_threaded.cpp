@@ -202,7 +202,7 @@ while(1)
         Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
-    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
@@ -237,6 +237,11 @@ while(1)
     fflush(stdout);
 #endif /* POSE_TO_CONSOLE */
 
+/// Temporarily moved here to save plain frames (without debug info)
+//#ifdef SAVEOFF_FRAMES
+//    saveDebugFrame(frame, imageSavepath);
+//#endif /* SAVEOFF_FRAMES */
+
 #ifdef DEBUG_VIDEO
         // print blobs on image (green)
 		//thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
@@ -261,7 +266,6 @@ while(1)
 #endif
 #ifdef SAVEOFF_FRAMES
     saveDebugFrame(frame, imageSavepath);
-
 #endif /* SAVEOFF_FRAMES */
 
 /// ////////// DEBUGGING SPECIFIC OPTIONS ////////// ///

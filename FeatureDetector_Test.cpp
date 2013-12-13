@@ -188,15 +188,21 @@ void *processing(void*)
 {
 sleep(3); // Ensure that the capture thread has time to initialize and fill buffer
 PnP.is_current = false;
+
+int i_frame = 0;
 while(1)
 {
+++i_frame;
+
 
     /// TODO:  Include some kind of protection to make sure we don't repeatedly process the same frame
     /// (if processing somehow goes faster than capturing -- not a problem on BBB right now)
     pthread_mutex_lock(&framelock_mutex);
     // Decode JPEG image stored in the most recently dequeued buffer
     //v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
-    frame = imread("/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN/TestImages_OLD/frame_0032.jpg");
+    char filepath[200];
+    sprintf(filepath,"/home/mdarling/Desktop/CompleteVision_MAIN/CompleteVision_MAIN/ManualTests/frame_%04d.jpg",i_frame);
+    frame = imread(filepath);
     Mat roi = frame(Range(400,475),Range(5,450));
     roi.setTo(Scalar(255,0,0));
 
@@ -208,7 +214,7 @@ while(1)
         Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
-    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 6, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL); //, preCorrelated);
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL); //, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
@@ -266,7 +272,7 @@ while(1)
 
 		PnP.drawOverFrame(frame);
 		imshow("DEBUG_VIDEO",frame);
-		waitKey(1);
+		waitKey(0);
 #endif /* DEBUG_VIDEO */
 
 
