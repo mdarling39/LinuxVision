@@ -214,7 +214,7 @@ while(1)
         Detector.findLEDs(frame,gray,binary,imagePoints,DetectorParams,PnP.is_current,PnP.projImagePoints);
 
     // Compute pose estimate
-    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL); //, preCorrelated);
+    int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL,preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
             PnP.is_current = true;
@@ -238,7 +238,7 @@ while(1)
     /// Print fps and pose estimate to console in real-time
 #ifdef POSE_TO_CONSOLE
     double fps_cnt=fps.fps();
-    printf("\e[J  FPS:  %6.2f        # of detected features: %4d\n",fps_cnt,imagePoints.size());
+    printf("\e[J  FPS:  %6.2f        # of detected features: %4d    # iters: %3d\n",fps_cnt,imagePoints.size(),poseIters);
     printf("  Pose Estimate:%7s  %7s  %7s  %7s  %7s  %7s   [in/deg]\n","x","y","z","roll","pitch","yaw");
     printf("                %7.1f  %7.1f  %7.1f  %7.1f  %7.1f  %7.1f",
     reportState[0], reportState[1], reportState[2],

@@ -359,7 +359,8 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 
 				PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
 
-				if (scaledReprojErr < perrTol){
+				// Relax the tolerance if we have a previous frame to help us out
+				if (scaledReprojErr < perrTol || (scaledReprojErr < serrTol && skipCorrelation)){
 					poseErr = scaledReprojErr;
 					poseState = PnPObj::getState();
 
@@ -378,8 +379,8 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 					error_buff.push_back(scaledReprojErr);
 					PnPObj_buff.push_back(*this); // append this instance of PnPObj to buffer
 				}
-                if (skipCorrelation)  //only go through one iteration if we are providing image pts in order
-                    break;
+//                if (skipCorrelation)  //only go through one iteration if we are providing image pts in order
+//                    break;
 			}
 		}
 
