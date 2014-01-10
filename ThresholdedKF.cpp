@@ -42,6 +42,8 @@ bool ThresholdedKF::initialize(double measurement[NDIM])
 }
 
 
+
+
 bool ThresholdedKF::forced_reset()
 {
     // Set the elapsed time to inifinity so that filter will be re-initialized
@@ -50,6 +52,7 @@ bool ThresholdedKF::forced_reset()
 
     return true;
 }
+
 
 
 bool ThresholdedKF::predict(double measurement[NDIM])
