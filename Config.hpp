@@ -50,7 +50,7 @@ void custom_v4l2_init(void* parm_void)
 
 #ifdef OUTDOOR
     set_manual_exposure(parm->fd, 3); // Outdoor exposure (4 to 2046)
-    set_parm(parm->fd, V4L2_CID_GAIN, 20); // Outdoor gain
+    set_parm(parm->fd, V4L2_CID_GAIN, 15); // Outdoor gain
 #endif
 
 #ifdef AUTO
@@ -94,13 +94,13 @@ void initializeFeatureDetectObj(LED_Detector::Params &params)
 
 #ifdef OUTDOOR
     /// Good outdoor vairables
-    params.threshold =             130;
+    params.threshold =             150;
     params.maxBlobs =              8;
 
     params.sortByColor =           true;
     params.targetColor =           320;   // Red-ish
     params.filterByColor =         true;
-    params.maxColor =              75;
+    params.maxColor =              50;
 
     params.filterByArea =          true;
     params.minArea =               2;
@@ -156,7 +156,7 @@ const char* modelPointsFilename =
 
 /// Pose estimate error tolerances
 const double POSE_ERR_TOL = 0.05;				// if reprojection error is lower than this --> move on
-const double SECONDARY_POSE_ERR_TOL = 0.30;	// otherwise, try re-ordering LED's and choose lowest
+const double SECONDARY_POSE_ERR_TOL = 0.25;	// otherwise, try re-ordering LED's and choose lowest
                                                 // error that still satisfies the secondary error tolerance
 
 /// Flight data recording

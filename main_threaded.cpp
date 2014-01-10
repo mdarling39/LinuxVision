@@ -8,6 +8,7 @@
 #include "BBBSerial.h"
 #include "FlightDataRecording.hpp"
 #include "ProfilerTool.h"  // ProfilerTool class to make profiling code easier
+#include "ThresholdedKF.hpp"    // class to filter vehicle state
 
 
 #include <opencv2/opencv.hpp>
@@ -49,6 +50,7 @@ LED_Detector::Params DetectorParams;
 LED_Detector Detector;
 PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
 FPSCounter fps(15); // Computes real-time frame rate
+ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
 #if ARM
         BBBSerial Serial;
 #endif
