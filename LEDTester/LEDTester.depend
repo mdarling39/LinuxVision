@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1386925492 source:/home/mdarling/Desktop/CompleteVision_MAIN/LEDTester/main.cpp
+	<iostream>
+	<cmath>
+	<algorithm>
+	<vector>
+
