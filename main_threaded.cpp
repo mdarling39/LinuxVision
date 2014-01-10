@@ -8,6 +8,7 @@
 #include "BBBSerial.h"
 #include "FlightDataRecording.hpp"
 #include "ProfilerTool.h"  // ProfilerTool class to make profiling code easier
+#include "ThresholdedKF.hpp"    // class to filter vehicle state
 
 
 #include <opencv2/opencv.hpp>
@@ -49,6 +50,8 @@ LED_Detector::Params DetectorParams;
 LED_Detector Detector;
 PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localization estimate
 FPSCounter fps(15); // Computes real-time frame rate
+ThresholdedKF::param_t KF_parms; // Kalman filter parameters
+ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
 #if ARM
         BBBSerial Serial;
 #endif
@@ -81,6 +84,12 @@ int main()
     // Read 3-D model geometry
     PnP.setModelPoints(modelPointsFilename);
     cout << "3-D model geometry read-in." << endl;
+
+    // Configure thresholded Kalman filter
+    configThresholdedKF(KF_parms);
+    KF.set_params(KF_parms);
+    KF.forced_reset();
+    cout << "Thresholded Kalman filter configured." << endl;
 
     // Check that serial ports were initialized
 #if ARM
@@ -205,8 +214,14 @@ while(1)
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
-            PnP.is_current = true;
+            // Employ Kalman filter
+            KF.predict(poseState.data());
+            if (!KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
+                KF.get_state(poseState.data()); // Return the ESTIMATED state
+
             reportState = poseState;
+            PnP.is_current = true;
+
     } else {
         PnP.is_current = false;
     }
