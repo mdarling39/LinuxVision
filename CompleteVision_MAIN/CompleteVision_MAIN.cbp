@@ -50,7 +50,6 @@
 		<Unit filename="../FPSCounter.hpp" />
 		<Unit filename="../FlightDataRecording.hpp" />
 		<Unit filename="../Global.hpp" />
-		<Unit filename="../KF_Test.cpp" />
 		<Unit filename="../KalmanFilter.cpp" />
 		<Unit filename="../KalmanFilter.hpp" />
 		<Unit filename="../LED_Detector.cpp" />

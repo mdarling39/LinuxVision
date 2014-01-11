@@ -52,6 +52,7 @@ PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localiza
 FPSCounter fps(15); // Computes real-time frame rate
 ThresholdedKF::param_t KF_parms; // Kalman filter parameters
 ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
+bool isOutlier = false;
 #if ARM
         BBBSerial Serial;
 #endif
@@ -214,11 +215,6 @@ while(1)
     int poseIters = PnP.localizeUAV(imagePoints, poseState, poseErr, 9, POSE_ERR_TOL, SECONDARY_POSE_ERR_TOL, preCorrelated);
     if ( poseIters > 0 && checkSanity(poseState) > 0 )
     {
-            // Employ Kalman filter
-            KF.predict(poseState.data());
-            if (!KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
-                KF.get_state(poseState.data()); // Return the ESTIMATED state
-
             reportState = poseState;
             PnP.is_current = true;
 
@@ -226,10 +222,19 @@ while(1)
         PnP.is_current = false;
     }
 
+    // Employ Kalman filter
+    KF.predict(reportState.data());
+    if (!KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
+    {
+        isOutlier = true;
+        KF.get_state(reportState.data()); // Return the ESTIMATED state
+    }else{
+        isOutlier = false;
+    }
 
     // send pose estimate to autopilot
 #if ARM
-        Serial.writeData(poseState);
+        Serial.writeData(reportState);
 #endif
 
 
@@ -248,7 +253,12 @@ while(1)
     reportState[3], reportState[4], reportState[5]);
     if (!PnP.is_current)
         printf("   ZOH");
-    printf("\r\e[2A"); // move cursor
+
+    if (isOutlier)
+        printf("\n  OUTLIER");
+    else
+        printf("\n  NOT OUTLIER");
+    printf("\r\e[3A"); // move cursor
     fflush(stdout);
 #endif /* POSE_TO_CONSOLE */
 
