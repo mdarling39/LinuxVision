@@ -64,7 +64,7 @@
 1386278073 /home/mdarling/Desktop/CompleteVision_MAIN/Global.hpp
 	<iostream>
 
-1389383018 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
+1389401843 /home/mdarling/Desktop/CompleteVision_MAIN/Config.hpp
 	"v4l2_c.h"
 	"LED_Detector.hpp"
 	"ThresholdedKF.hpp"
@@ -216,7 +216,11 @@
 	<opencv2/opencv.hpp>
 	"neon_instructions.h"
 
-1389386781 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+<<<<<<< HEAD
+1389484176 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+=======
+1389483420 source:/home/mdarling/Desktop/CompleteVision_MAIN/main_threaded.cpp
+>>>>>>> origin/KF_Debugging
 	"Global.hpp"
 	"Config.hpp"
 	"v4l2_c.h"
@@ -232,6 +236,9 @@
 	<iostream>
 	<iterator>
 	<pthread.h>
+	<fstream>
+	<ctime>
+	<signal.h>
 
 1383256418 /home/mdarling/Desktop/CompleteVision_MAIN/v4l2_c.h
 	<stdio.h>
@@ -291,13 +298,13 @@
 	<iterator>
 	<pthread.h>
 
-1389382663 /home/mdarling/Desktop/CompleteVision_MAIN/ThresholdedKF.hpp
+1389392796 /home/mdarling/Desktop/CompleteVision_MAIN/ThresholdedKF.hpp
 	<cmath>
 	<algorithm>
 	<time.h>
 	<iostream>
 
-1389382721 source:/home/mdarling/Desktop/CompleteVision_MAIN/ThresholdedKF.cpp
+1389400275 source:/home/mdarling/Desktop/CompleteVision_MAIN/ThresholdedKF.cpp
 	"ThresholdedKF.hpp"
 
 1389234366 source:/home/mdarling/Desktop/CompleteVision_MAIN/KF_Test.cpp
