@@ -16,6 +16,9 @@
 #include <iostream>
 #include <iterator>
 #include <pthread.h>    // multithreading
+#include <fstream>  // DEBUG: For saving data to file
+#include <ctime>    // DEBUG: For recording time
+#include <signal.h> // DEBUG: Handle SIGINT signal (close files to avoid corrupted data)
 
 #define PRINT_LINEBREAK()\
  printf("--------------------------------------------------------------------------------\n")
@@ -52,7 +55,21 @@ PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localiza
 FPSCounter fps(15); // Computes real-time frame rate
 ThresholdedKF::param_t KF_parms; // Kalman filter parameters
 ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
+
+// POSIX compliant threads
+pthread_t capture_thread;
+pthread_t processing_thread;
+
+// DEBUG: Create file to store Kalman filter debug data to as well as a timer
 bool isOutlier = false;
+ofstream DEBUGFILE;
+struct timespec DEBUG_tic, DEBUG_toc;
+double DEBUG_elapsed = 0;
+int simulated_fps = INFINITY; // Slow down to the desired framerate (to run closer to embedded system)
+struct timespec simulated_fps_tic, simulated_fps_toc; // clock objects to measure time
+double simulated_fps_elapsed;
+
+
 #if ARM
         BBBSerial Serial;
 #endif
@@ -68,6 +85,20 @@ pthread_cond_t done_saving_frame = PTHREAD_COND_INITIALIZER;
 pthread_cond_t done_using_frame = PTHREAD_COND_INITIALIZER;
 
 void selfIdentifySystem(void);
+
+void signal_callback_handler(int signum)
+{
+    printf("Interrupt signal received, closing files and shutting down");
+
+    // Close the DEBUG file to avoid corrupted data
+    DEBUGFILE.close();
+
+    // kill all pthreads
+    pthread_kill(processing_thread, SIGKILL);
+    pthread_kill(capture_thread, SIGKILL);
+
+    exit(signum);
+}
 
 int main()
 {
@@ -92,6 +123,14 @@ int main()
     KF.forced_reset();
     cout << "Thresholded Kalman filter configured." << endl;
 
+    // DEBUG: Open file for writing data to and start clock
+    DEBUGFILE.open("KF_Debug.txt");
+    clock_gettime(CLOCK_MONOTONIC, &DEBUG_tic);
+    clock_gettime(CLOCK_MONOTONIC, &simulated_fps_tic); // start timer for simulated FPS
+    // Register signal and signal handler
+    signal(SIGINT, signal_callback_handler);
+
+
     // Check that serial ports were initialized
 #if ARM
     // This is actually done above main() for global scope
@@ -111,9 +150,6 @@ int main()
 
 
     // Initialize pthreads
-    pthread_t capture_thread;
-    pthread_t processing_thread;
-
     pthread_create(&capture_thread,NULL,capture,NULL);
     pthread_create(&processing_thread,NULL,processing,NULL);
 
@@ -206,6 +242,15 @@ while(1)
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
     pthread_mutex_unlock(&framelock_mutex);
 
+    // DEBUG: Wait until the desired amount of time has passed
+    do
+    {
+        clock_gettime(CLOCK_MONOTONIC, &simulated_fps_toc);
+        simulated_fps_elapsed = (simulated_fps_toc.tv_sec - simulated_fps_tic.tv_sec);
+        simulated_fps_elapsed+= (simulated_fps_toc.tv_nsec - simulated_fps_tic.tv_nsec) / 1000000000.0;
+    } while (simulated_fps_elapsed < 1.0/(simulated_fps));
+    clock_gettime(CLOCK_MONOTONIC, &simulated_fps_tic);
+
 
     vector<Point2f> imagePoints;
     bool preCorrelated =
@@ -222,6 +267,18 @@ while(1)
         PnP.is_current = false;
     }
 
+
+    // DEBUG: write Kalman filter inputs to file (including time)
+    // compute time
+    clock_gettime(CLOCK_MONOTONIC, &DEBUG_toc);
+    DEBUG_elapsed = DEBUG_toc.tv_sec - DEBUG_tic.tv_sec;
+    DEBUG_elapsed+= (DEBUG_toc.tv_nsec - DEBUG_tic.tv_nsec) / 1000000000.0;
+    DEBUGFILE << DEBUG_elapsed << ",";
+    // save input state
+    for (int i=0; i<reportState.size(); i++)
+        DEBUGFILE << reportState[i] << ",";
+
+
     // Employ Kalman filter
     KF.predict(reportState.data());
     if (!KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
@@ -231,6 +288,11 @@ while(1)
     }else{
         isOutlier = false;
     }
+
+    // DEBUG: save output from Kalman filter
+    for (int i=0; i<reportState.size()-1; i++)
+        DEBUGFILE << reportState[i] << ",";
+    DEBUGFILE << reportState.back() << "\n"; // don't write comma, proceed to newline
 
     // send pose estimate to autopilot
 #if ARM
