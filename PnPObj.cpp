@@ -122,8 +122,23 @@ void PnPObj::resetGuess() {
 void PnPObj::computeEuler() {
 	cv::Rodrigues(rvec,rotMat);			// update rotation matrix
 	B_rotMat = CV2B * rotMat * B2CV;	// change the rotation matrix from CV convention to RHS body frame
-	theta = asin(-B_rotMat.at<double>(2,0));				// get the Euler angles (seems to be problematic)
-	psi = asin(B_rotMat.at<double>(1,0) / cos(theta));		// could be a memory assignment problem
+
+	// get the Euler angles
+	phi = atan2(B_rotMat.at<double>(2,1),B_rotMat.at<double>(2,2));  // get (-pi < phi < phi)
+	double cos_theta = B_rotMat.at<double>(2,1) / sin(phi);
+	if ( cos_theta > 0) // see if ||theta|| < 90 deg
+        theta = asin(-B_rotMat.at<double>(2,0));        // 1st or 4th quadrants: (-pi/2 < theta < pi/2)
+    else
+        theta = M_PI - asin(-B_rotMat.at<double>(2,0)); // 2nd or 3rd quadrants: (-pi < theta < -pi/2) or (pi/2 < theta < pi)
+	psi = atan2(B_rotMat.at<double>(1,0), B_rotMat.at<double>(0,0));  // get (-pi < psi < pi)
+
+
+
+	theta1 = asin(-B_rotMat.at<double>(2,0));
+	theta2 = M_PI - theta1;
+	theta = (abs(theta1) < abs(theta2)) ? theta1 : theta2;  // return the angle closest to 0 deg
+
+
 	phi = asin(B_rotMat.at<double>(2,1) / cos(theta));
 	B_tvec.at<double>(0,0) = tvec.at<double>(2,0);			// get the body translation vector (Works fine)
 	B_tvec.at<double>(1,0) = tvec.at<double>(0,0);
@@ -476,6 +491,95 @@ std::vector<double> PnPObj::getState() {
 
 // draw over frame
 void PnPObj::drawOverFrame(cv::Mat &src) {
+
+    std::vector<double> state(6);
+    state[0] = B_tvec.at<double>(0,0)*MM2IN;
+    state[1] = B_tvec.at<double>(1,0)*MM2IN;
+    state[2] = B_tvec.at<double>(2,0)*MM2IN;
+    state[3] = phi*RAD2DEG;
+    state[4] = theta*RAD2DEG;
+    state[5] = psi*RAD2DEG;
+
+    std::vector<cv::Point2f> projAxesPointsIN, projImagePointsIN;
+    projAxesPointsIN = projAxesPoints;
+    projImagePointsIN = projImagePoints;
+
+    drawOverFrame(src, projAxesPointsIN, projImagePointsIN, state);
+}
+
+void PnPObj::drawOverFrame(cv::Mat &src, std::vector<double> stateIN) {
+    /*
+    HAVE TO RECOMPUTE REPROJECTION FOR stateIN (WHICH IS TYPICALLY A KALMAN FILTERED STATE)
+
+    /// COPIED CODE FROM FUNCTIONS ABOVE (USED TO REVERSE-ENGINEER THIS CODE)
+
+    B_tvec.at<double>(0,0) = tvec.at<double>(2,0);			// get the body translation vector (Works fine)
+	B_tvec.at<double>(1,0) = tvec.at<double>(0,0);
+	B_tvec.at<double>(2,0) = tvec.at<double>(1,0);
+
+	// reconstruct rotation matrix: from object frame to camera frame
+	B_rotMat.at<double>(0,0) = cos(theta)*cos(psi);
+	B_rotMat.at<double>(0,1) = sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi);
+	B_rotMat.at<double>(0,2) = cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi);
+	B_rotMat.at<double>(1,0) = cos(theta)*sin(psi);
+	B_rotMat.at<double>(1,1) = sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi);
+	B_rotMat.at<double>(1,2) = cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi);
+	B_rotMat.at<double>(2,0) = -sin(theta);
+	B_rotMat.at<double>(2,1) = sin(phi)*cos(theta);
+	B_rotMat.at<double>(2,2) = cos(phi)*cos(theta);
+
+	// recompute rvec from new rotation matrix
+	rotMat = B2CV * B_rotMat * CV2B;	// convert body rotation matrix
+	cv::Rodrigues(rotMat,rvec);			// to OpenCV rotation matrix
+    */
+
+    // create new variables with "d_" prefix with same type and size as
+    // PnPObj class members
+    cv::Mat d_tvec(tvec.size(), tvec.type());
+    cv::Mat d_rvec(rvec.size(), rvec.type());
+    cv::Mat d_B_rotMat(B_rotMat.size(), B_rotMat.type());
+    cv::Mat d_rotMat(rotMat.size(), rotMat.type());
+    double d_phi, d_theta, d_psi;
+
+    // Load d_tvec and d_rvec from the input state (making sure to convert units)
+    d_tvec.at<double>(2,0) = stateIN[0] / MM2IN;  // dz
+    d_tvec.at<double>(0,0) = stateIN[1] / MM2IN;  // dx
+    d_tvec.at<double>(1,0) = stateIN[2] / MM2IN;  // dy
+    d_phi =     stateIN[3] / RAD2DEG;             // dphi
+    d_theta =   stateIN[4] / RAD2DEG;             // dtheta
+    d_psi =     stateIN[5] / RAD2DEG;             // dpsi
+
+    // Compute rotation matrix by copying code from set_Euler and replacing variables with
+    // "d_" prefixed replacements
+    d_B_rotMat.at<double>(0,0) = cos(d_theta)*cos(d_psi);
+	d_B_rotMat.at<double>(0,1) = sin(d_phi)*sin(d_theta)*cos(d_psi) - cos(d_phi)*sin(d_psi);
+	d_B_rotMat.at<double>(0,2) = cos(d_phi)*sin(d_theta)*cos(d_psi) + sin(d_phi)*sin(d_psi);
+	d_B_rotMat.at<double>(1,0) = cos(d_theta)*sin(d_psi);
+	d_B_rotMat.at<double>(1,1) = sin(d_phi)*sin(d_theta)*sin(d_psi) + cos(d_phi)*cos(d_psi);
+	d_B_rotMat.at<double>(1,2) = cos(d_phi)*sin(d_theta)*sin(d_psi) - sin(d_phi)*cos(d_psi);
+	d_B_rotMat.at<double>(2,0) = -sin(d_theta);
+	d_B_rotMat.at<double>(2,1) = sin(d_phi)*cos(d_theta);
+	d_B_rotMat.at<double>(2,2) = cos(d_phi)*cos(d_theta);
+
+	// Compute rotation vector using "d_" prefixed variables
+	d_rotMat = B2CV * d_B_rotMat * CV2B;
+	cv::Rodrigues(d_rotMat,d_rvec);
+
+
+    // Reproject points simlar to projectAll() method
+    std::vector<cv::Point2f> projImagePointsIN, projAxesPointsIN;
+    cv::projectPoints(modelPoints, rvec, tvec, cameraMatrix, distCoeffs, projImagePointsIN);
+	cv::projectPoints(axesPoints, rvec, tvec, cameraMatrix, distCoeffs, projAxesPointsIN);
+
+    // Draw over frame using thets projected values
+    drawOverFrame(src, projAxesPointsIN, projImagePointsIN, stateIN);
+
+
+}
+
+void PnPObj::drawOverFrame(cv::Mat &src, std::vector<cv::Point2f> &projAxesPointsIN,
+    std::vector<cv::Point2f> &projImagePointsIN, std::vector<double> stateIN)
+{
 	char pointLabel[5];
 	cv::Point2f pointLabelLoc;
 	char stateText1[100], stateText2[100], errText[100];
@@ -489,17 +593,21 @@ void PnPObj::drawOverFrame(cv::Mat &src) {
 					1.5, cv::Scalar(255,255,255), 1);
 
 
-			cv::circle(src,projImagePoints[i], 3, cv::Scalar(0,255,255), 3);
-			cv::line(src,projAxesPoints[0], projAxesPoints[1], cv::Scalar(0,0,255), 2);
-			cv::line(src,projAxesPoints[0], projAxesPoints[2], cv::Scalar(0,255,0), 2);
-			cv::line(src,projAxesPoints[0], projAxesPoints[3], cv::Scalar(255,0,0), 2);
+			cv::circle(src,projImagePointsIN[i], 3, cv::Scalar(0,255,255), 3);
+			cv::line(src,projAxesPointsIN[0], projAxesPointsIN[3], cv::Scalar(255,0,0), 2);
+			cv::line(src,projAxesPointsIN[0], projAxesPointsIN[1], cv::Scalar(0,0,255), 2);
+			cv::line(src,projAxesPointsIN[0], projAxesPointsIN[2], cv::Scalar(0,255,0), 2);
 
 			sprintf(stateText1," dx: %8.2f    dy: %8.2f   dz: %8.2f",
-					B_tvec.at<double>(0,0)*MM2IN,
-					B_tvec.at<double>(1,0)*MM2IN,
-					B_tvec.at<double>(2,0)*MM2IN);
+                stateIN[0],
+                stateIN[1],
+                stateIN[2]);
 
-			sprintf(stateText2,"phi: %8.2f  theta: %8.2f  psi: %8.2f",phi*RAD2DEG,theta*RAD2DEG,psi*RAD2DEG);
+			sprintf(stateText2,"phi: %8.2f  theta: %8.2f  psi: %8.2f",
+                stateIN[3],
+                stateIN[4],
+                stateIN[5]);
+
 			if (is_current)
                 sprintf(errText,"Reproj. Err: %10.6f", scaledReprojErr);
             else

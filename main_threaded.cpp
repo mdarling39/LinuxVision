@@ -65,7 +65,7 @@ bool isOutlier = false;
 ofstream DEBUGFILE;
 struct timespec DEBUG_tic, DEBUG_toc;
 double DEBUG_elapsed = 0;
-int simulated_fps = INFINITY; // Slow down to the desired framerate (to run closer to embedded system)
+int simulated_fps = 20; // Slow down to the desired framerate (to run closer to embedded system)
 struct timespec simulated_fps_tic, simulated_fps_toc; // clock objects to measure time
 double simulated_fps_elapsed;
 
@@ -281,12 +281,15 @@ while(1)
 
     // Employ Kalman filter
     KF.predict(reportState.data());
-    if (!KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
+    if (KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
     {
-        isOutlier = true;
+        // Not an outlier
+        isOutlier = false;
         KF.get_state(reportState.data()); // Return the ESTIMATED state
     }else{
-        isOutlier = false;
+        // Is an outlier
+        isOutlier = true;
+        KF.get_state(reportState.data()); // Return the ESTIMATED state
     }
 
     // DEBUG: save output from Kalman filter
@@ -342,7 +345,7 @@ while(1)
 		}
 		*/
 
-		PnP.drawOverFrame(frame);
+		PnP.drawOverFrame(frame, reportState);
 		imshow("DEBUG_VIDEO",frame);
 		waitKey(1);
 #endif /* DEBUG_VIDEO */

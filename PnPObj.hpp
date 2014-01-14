@@ -116,6 +116,8 @@ public:
 
 	// draw over frame
 	void drawOverFrame(cv::Mat &src);
+	void drawOverFrame(cv::Mat &src, std::vector<double>);
+	void drawOverFrame(cv::Mat &src, std::vector<cv::Point2f>&, std::vector<cv::Point2f>&, std::vector<double>);
 
 	// generates a vector of 5 imagePoints
 	bool swapImagePoints(const std::vector<cv::Point2f> imagePoints_IN, std::vector<cv::Point2f> &swappedImagePoints, const int num);
