@@ -374,6 +374,10 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 
 				PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
 
+                // Do not allow inverted flight ( |theta | > 90 deg)
+                if (abs(poseState[1]) > M_PI )
+                    scaledReprojErr = INFINITY;
+
 				// Relax the tolerance if we have a previous frame to help us out
 				if (scaledReprojErr < perrTol || (scaledReprojErr < serrTol && skipCorrelation)){
 					poseErr = scaledReprojErr;
