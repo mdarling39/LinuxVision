@@ -124,22 +124,14 @@ void PnPObj::computeEuler() {
 	B_rotMat = CV2B * rotMat * B2CV;	// change the rotation matrix from CV convention to RHS body frame
 
 	// get the Euler angles
-	phi = atan2(B_rotMat.at<double>(2,1),B_rotMat.at<double>(2,2));  // get (-pi < phi < phi)
-	double cos_theta = B_rotMat.at<double>(2,1) / sin(phi);
-	if ( cos_theta > 0) // see if ||theta|| < 90 deg
-        theta = asin(-B_rotMat.at<double>(2,0));        // 1st or 4th quadrants: (-pi/2 < theta < pi/2)
-    else
-        theta = M_PI - asin(-B_rotMat.at<double>(2,0)); // 2nd or 3rd quadrants: (-pi < theta < -pi/2) or (pi/2 < theta < pi)
-	psi = atan2(B_rotMat.at<double>(1,0), B_rotMat.at<double>(0,0));  // get (-pi < psi < pi)
-
-
-
+	double theta1, theta2, cos_theta;
 	theta1 = asin(-B_rotMat.at<double>(2,0));
 	theta2 = M_PI - theta1;
-	theta = (abs(theta1) < abs(theta2)) ? theta1 : theta2;  // return the angle closest to 0 deg
+	theta = (abs(theta1) < (M_PI/2)) ? theta1 : theta2;
+    cos_theta = cos(theta);
+    phi = atan2(B_rotMat.at<double>(2,1) * cos_theta, B_rotMat.at<double>(2,2) * cos_theta);
+    psi = atan2(B_rotMat.at<double>(1,0) * cos_theta, B_rotMat.at<double>(0,0) * cos_theta);
 
-
-	phi = asin(B_rotMat.at<double>(2,1) / cos(theta));
 	B_tvec.at<double>(0,0) = tvec.at<double>(2,0);			// get the body translation vector (Works fine)
 	B_tvec.at<double>(1,0) = tvec.at<double>(0,0);
 	B_tvec.at<double>(2,0) = tvec.at<double>(1,0);
@@ -353,56 +345,64 @@ int PnPObj::localizeUAV(const std::vector<cv::Point2f> &imagePoints_IN, std::vec
 
 	int iters = 0;
 
-	if (imagePoints_IN.size() >= (int)NO_LEDS){ // have enough image points
+    if (imagePoints_IN.size() >= (int)NO_LEDS)
+    {
+        // have enough image points
 
-		for (int i=0; i<3; i++){
-			for (int j=0; j<max_swaps; j++){
-				iters++; // advance iteration count
 
-				// swap image points
-				if(!PnPObj::swapImagePoints(imagePoints_IN,imagePoints,j)){
-					// don't have enough blobs to sort using code j
-					continue;
-				}
+        for (int i=0; i<3; i++)   // Correlations
+        {
+            for (int j=0; j<max_swaps; j++)   // Point Swaps
+            {
+                iters++; // advance iteration count
 
-				// don't need to call setImagePoints() here since having
-				// swapImagePoints output to PnPObj::imagePoints member
+                // swap image points
+                if(!PnPObj::swapImagePoints(imagePoints_IN,imagePoints,j))
+                {
+                    // don't have enough blobs to sort using code j
+                    break;
+                }
 
-				// loop through 3 possible re-correlation schemes between 3-D geometry and image points
-				if (!skipCorrelation)
+                // don't need to call setImagePoints() here since having
+                // swapImagePoints output to PnPObj::imagePoints member
+
+                // loop through 3 possible re-correlation schemes between 3-D geometry and image points
+                if (!skipCorrelation)
                     PnPObj::correlatePoints(i);
 
-				PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
+                PnPObj::solve();	 // WARNING:  Modifies private member function values of PnPObj!
 
-                // Do not allow inverted flight ( |theta | > 90 deg)
-                if (abs(poseState[1]) > M_PI )
-                    scaledReprojErr = INFINITY;
+                // Do not allow inverted flight ( |phi| > 90 deg)
+                if (abs(phi) > (M_PI/2) )
+                    continue;
 
-				// Relax the tolerance if we have a previous frame to help us out
-				if (scaledReprojErr < perrTol || (scaledReprojErr < serrTol && skipCorrelation)){
-					poseErr = scaledReprojErr;
-					poseState = PnPObj::getState();
+                // Relax the tolerance if we have a previous frame to help us out
+                if ((scaledReprojErr < perrTol) || (((scaledReprojErr < serrTol) && skipCorrelation)))
+                {
+                    poseErr = scaledReprojErr;
+                    poseState = PnPObj::getState();
 
-					// convert units
-					poseState[0] *= MM2IN;
-					poseState[1] *= MM2IN;
-					poseState[2] *= MM2IN;
-					poseState[3] *= RAD2DEG;
-					poseState[4] *= RAD2DEG;
-					poseState[5] *= RAD2DEG;
-					return iters;
+                    // convert units
+                    poseState[0] *= MM2IN;
+                    poseState[1] *= MM2IN;
+                    poseState[2] *= MM2IN;
+                    poseState[3] *= RAD2DEG;
+                    poseState[4] *= RAD2DEG;
+                    poseState[5] *= RAD2DEG;
+                    return iters;
 
-				} else if (scaledReprojErr < serrTol) {
-					// append to buffer and continue
-					poseState_buff.push_back(PnPObj::getState());
-					error_buff.push_back(scaledReprojErr);
-					PnPObj_buff.push_back(*this); // append this instance of PnPObj to buffer
-				}
-//                if (skipCorrelation)  //only go through one iteration if we are providing image pts in order
-//                    break;
+                }
+                else if (scaledReprojErr < serrTol)
+                {
+                    // append to buffer and continue
+                    poseState_buff.push_back(PnPObj::getState());
+                    error_buff.push_back(scaledReprojErr);
+                    PnPObj_buff.push_back(*this); // append this instance of PnPObj to buffer
+                }
 			}
+            if (skipCorrelation)  //only go through one iteration if we are providing image pts in order
+                break;
 		}
-
 
 		if (!error_buff.empty()) { // have a plausible estimate
 			// find the minimum error in the buffer

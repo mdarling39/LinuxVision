@@ -129,7 +129,7 @@ void configThresholdedKF(ThresholdedKF::param_t &KF_parms)
     KF_parms.R = 1e-4;
     KF_parms.P0 = 0.01;
     KF_parms.KF_thresh = 1e6;
-    KF_parms.timeout = 500;
+    KF_parms.timeout = 300;
 }
 
 

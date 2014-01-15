@@ -33,7 +33,7 @@
 
 
 
-/// Macros (removed ability to save blobFile and poseFile)
+/// Macros (uncomment to disable)
 #define POSE_TO_CONSOLE             1       // write standard info to console
 #define DEBUG_STDOUT	            1		// write debug info to stdout
 #define DEBUG_VIDEO		            1       // display video debug data
