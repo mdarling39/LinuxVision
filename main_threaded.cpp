@@ -60,14 +60,18 @@ ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
 pthread_t capture_thread;
 pthread_t processing_thread;
 
+#if (!ARM)
+struct timespec simulated_fps_tic, simulated_fps_toc; // clock objects to measure time
+double simulated_fps_elapsed;
+#endif //ARM
+
+
+#ifdef SAVE_KF_DATA
 // DEBUG: Create file to store Kalman filter debug data to as well as a timer
-bool isOutlier = false;
 ofstream DEBUGFILE;
 struct timespec DEBUG_tic, DEBUG_toc;
 double DEBUG_elapsed = 0;
-int simulated_fps = 20; // Slow down to the desired framerate (to run closer to embedded system)
-struct timespec simulated_fps_tic, simulated_fps_toc; // clock objects to measure time
-double simulated_fps_elapsed;
+#endif // SAVE_KF_DATA
 
 
 #if ARM
@@ -90,13 +94,16 @@ void signal_callback_handler(int signum)
 {
     printf("Interrupt signal received, closing files and shutting down");
 
+#ifdef SAVE_KF_DATA
     // Close the DEBUG file to avoid corrupted data
     DEBUGFILE.close();
+#endif //SAVE_KF_DATA
 
     // kill all pthreads
     pthread_kill(processing_thread, SIGKILL);
     pthread_kill(capture_thread, SIGKILL);
 
+    cout << "PROGRAM TERMINATED" << endl;
     exit(signum);
 }
 
@@ -123,10 +130,13 @@ int main()
     KF.forced_reset();
     cout << "Thresholded Kalman filter configured." << endl;
 
+#ifdef SAVE_KF_DATA
     // DEBUG: Open file for writing data to and start clock
     DEBUGFILE.open("KF_Debug.txt");
     clock_gettime(CLOCK_MONOTONIC, &DEBUG_tic);
     clock_gettime(CLOCK_MONOTONIC, &simulated_fps_tic); // start timer for simulated FPS
+#endif //SAVE_KF_DATA
+
     // Register signal and signal handler
     signal(SIGINT, signal_callback_handler);
 
@@ -242,6 +252,7 @@ while(1)
     v4l2_process_image(frame, user_buffer.ptr[user_buffer.buf_last]);
     pthread_mutex_unlock(&framelock_mutex);
 
+#if (!ARM)
     // DEBUG: Wait until the desired amount of time has passed
     do
     {
@@ -250,6 +261,7 @@ while(1)
         simulated_fps_elapsed+= (simulated_fps_toc.tv_nsec - simulated_fps_tic.tv_nsec) / 1000000000.0;
     } while (simulated_fps_elapsed < 1.0/(simulated_fps));
     clock_gettime(CLOCK_MONOTONIC, &simulated_fps_tic);
+#endif //ARM
 
 
     vector<Point2f> imagePoints;
@@ -267,7 +279,7 @@ while(1)
         PnP.is_current = false;
     }
 
-
+#ifdef SAVE_KF_DATA
     // DEBUG: write Kalman filter inputs to file (including time)
     // compute time
     clock_gettime(CLOCK_MONOTONIC, &DEBUG_toc);
@@ -277,25 +289,20 @@ while(1)
     // save input state
     for (int i=0; i<reportState.size(); i++)
         DEBUGFILE << reportState[i] << ",";
+#endif //SAVE_KF_DATA
 
 
     // Employ Kalman filter
     KF.predict(reportState.data());
-    if (KF.correct())  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
-    {
-        // Not an outlier
-        isOutlier = false;
-        KF.get_state(reportState.data()); // Return the ESTIMATED state
-    }else{
-        // Is an outlier
-        isOutlier = true;
-        KF.get_state(reportState.data()); // Return the ESTIMATED state
-    }
+    KF.correct();  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
+    KF.get_state(reportState.data()); // Return the ESTIMATED state
 
+#ifdef SAVE_KF_DATA
     // DEBUG: save output from Kalman filter
     for (int i=0; i<reportState.size()-1; i++)
         DEBUGFILE << reportState[i] << ",";
     DEBUGFILE << reportState.back() << "\n"; // don't write comma, proceed to newline
+#endif //SAVE_KF_DATA
 
     // send pose estimate to autopilot
 #if ARM
@@ -319,11 +326,7 @@ while(1)
     if (!PnP.is_current)
         printf("   ZOH");
 
-    if (isOutlier)
-        printf("\n  OUTLIER");
-    else
-        printf("\n  NOT OUTLIER");
-    printf("\r\e[3A"); // move cursor
+    printf("\r\e[2A"); // move cursor
     fflush(stdout);
 #endif /* POSE_TO_CONSOLE */
 
@@ -333,23 +336,10 @@ while(1)
 //#endif /* SAVEOFF_FRAMES */
 
 #ifdef DEBUG_VIDEO
-        // print blobs on image (green)
-		//thresh.createBlobsImage(frame,cv::Scalar(0,255,0));
-
-		// print the 5 "most probable" blobs on image (blue)
-		/*
-		if (imagePoints.size() > 0) {
-			for (int i = 0; i < imagePoints.size(); i++) {
-				cv::circle(frame,imagePoints[i], 5, cv::Scalar(255,0,0), 3);
-			}
-		}
-		*/
-
 		PnP.drawOverFrame(frame, reportState);
 		imshow("DEBUG_VIDEO",frame);
 		waitKey(1);
 #endif /* DEBUG_VIDEO */
-
 
 #if defined(SAVEOFF_FRAMES) && !defined(DEBUG_VIDEO) // don't repeat this step
     PnP.drawOverFrame(frame);

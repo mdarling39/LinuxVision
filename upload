@@ -1,0 +1,10 @@
+#!/bin/bash
+
+SOURCE='.';
+FILES='{upload,build,*.h,*.hpp,*.c,*.cpp,Calibration}';
+DESTINATION='ubuntu@192.168.7.2:~/MAIN';
+FILELIST="$(eval echo "${SOURCE}"/"${FILES}")"
+
+set -x
+scp -r $(eval echo "$FILELIST")  $(eval echo $DESTINATION)
+set +x

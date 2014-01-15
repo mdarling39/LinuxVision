@@ -38,6 +38,7 @@
 #define DEBUG_STDOUT	            1		// write debug info to stdout
 #define DEBUG_VIDEO		            1       // display video debug data
 #define SAVEOFF_FRAMES		        1       // save off frames to memory
+//#define SAVE_KF_DATA                1       // save inputs and outputs of KF data to KF_Debug.txt
 
 #if ARM  // never try and display video on ARM system
 #undef DEBUG_VIDEO

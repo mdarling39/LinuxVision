@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SOURCE='.';
+DESTINATION='ubuntu@192.168.7.2:~/Vision2';
+FILES=`{upload,build,*.h,*.hpp,*.c,*.cpp,Calibration}`;
+
+set -x
+scp -r ${SOURCE}/${FILES} ${DESTINATION}
+set +x

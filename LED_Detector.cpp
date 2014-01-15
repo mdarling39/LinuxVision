@@ -64,7 +64,7 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
         leaderROI_contour.assign(verticies,verticies + 4);
 
         /// Uncomment to draw ROI on image frame
-#ifdef DEBUG_VIDEO
+#if defined (DEBUG_VIDEO) || defined (SAVEOFF_FRAMES)
         for (int i_test=0; i_test<4; i_test++)
             line(frame, leaderROI_contour[i_test], leaderROI_contour[(i_test+1)%4], Scalar(255,255,255));
 #endif
@@ -81,8 +81,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
         contourStruct.area = CV_PI * (contourStruct.radius * contourStruct.radius);
 
         /// Uncomment to view all detected blobs
+#if (!ARM)
         cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 3);
-
+#endif
         /// Consider only the points that fall within a ROI around the last known position
         if (havePreviousState)
         {
@@ -90,7 +91,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
             if (pointPolygonTest(leaderROI_contour,contourStruct.center,false) < 0 )
                 continue;
             /// Uncomment to show/highlight blobs that appear inside ROI
+#if (!ARM)
             cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 2);
+#endif
         }
 
         if (params.filterByArea)

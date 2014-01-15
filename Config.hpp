@@ -26,6 +26,9 @@ const int IM_HEIGHT = 480;
 const int IM_FPS = 30;
 #define BUF_SZ 4
 
+// Simulation FPS (can slow faster computers to emulate embedded computer speed)
+int simulated_fps = 20; // Slow down to the desired framerate (to run closer to embedded system)
+
 // Custom camera initialiazation function
 void custom_v4l2_init(void* parm_void)
 {
@@ -181,7 +184,6 @@ char imageSavepath[] =
     "TestImages";		// directory to save debug frames in
 #endif
 unsigned int frameSkip_ms = 1000;  // Sets how often to save an image (in milliseconds)
-
 
 
 #endif /* CONFIG_H_ */

@@ -1,20 +1,40 @@
 #!/bin/bash
 
 FLAGS="";
+COMPILER="";
 
 if [ "$#" == 0 ]; then
 	echo "Regular code"
-
+elif [ "$1" == "regular" ]; then
+	echo "Regular code"
 elif [ $1 == "profile" ]; then
-	FLAGS="$FLAGS -pg ";
+	FLAGS="$FLAGS -pg "
 	echo "Profiling code"
 elif [ $1 == "optimize" ]; then
-	FLAGS="$FLAGS -O3 ";
+	FLAGS="$FLAGS -Ofast "
 	echo "Optimized code"
 else
 	echo "Regular code"
 fi
 
-g++ ${FLAGS}  CompleteVision_MAIN.cpp BBBSerial.cpp CamObj.cpp FPSCounter.cpp\
- KalmanFilter.cpp OCVCapture.cpp PnPObj.cpp  Threshold.cpp customblobdetector.cpp\
- v4l2Cap.cpp -o main `pkg-config --cflags --libs opencv libv4l2`
+if [ "$#" -lt 2 -o "$1" == "regular" ]; then
+	echo "Building for host machine"
+	if [ `uname -n` == "arm" ]; then
+		echo "ARM processor detected"
+		FLAGS="$FLAGS -mfpu=neon "
+		# can also consider -ftree-vectorize option
+	fi
+elif [ $2 == "arm" ]; then
+	# find arm cross-compiler and trim last 3 characters (g++)
+	COMPILER=`find ~ -name arm-linux-gnueabihf-g++`
+	COMPILER=$(echo $COMPILER | cut -c 1-$(echo `expr ${#COMPILER} - 3`))
+	FLAGS="$FLAGS -mfpu=neon ";
+	${COMPILER}g++ --version
+fi
+
+set -x
+${COMPILER}g++ ${FLAGS}  -pthread main_threaded.cpp CamObj.cpp FPSCounter.cpp\
+ PnPObj.cpp  v4l2Cap.cpp Threshold.cpp customblobdetector.cpp\
+ BBBSerial.cpp LED_Detector.cpp ThresholdedKF.cpp -o main\
+ `pkg-config --cflags --libs opencv libv4l2`
+set +x
