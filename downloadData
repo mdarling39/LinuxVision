@@ -1,0 +1,17 @@
+#!/bin/bash
+
+SOURCE='ubuntu@192.168.7.2:/media/ubuntu/microSD/TestImages/*';
+DESTINATION=${HOME}"/Desktop/Flight Logs/Images";
+
+# Detect if destination is provided or not
+if [ "$#" != "1" ]; then
+	echo "Must supply name of destination folder (i.e. TestImages_X)"
+	exit;
+fi
+
+DESTINATION="${DESTINATION}/$1";
+
+set -x
+mkdir "${DESTINATION}"
+scp $(eval echo "${SOURCE}") "${DESTINATION}"
+set +x
