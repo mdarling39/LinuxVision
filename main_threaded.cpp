@@ -18,6 +18,7 @@
 #include <pthread.h>    // multithreading
 #include <fstream>  // DEBUG: For saving data to file
 #include <ctime>    // DEBUG: For recording time
+#include <unistd.h> // DEBUG: Short delay
 #include <signal.h> // DEBUG: Handle SIGINT signal (close files to avoid corrupted data)
 
 #define PRINT_LINEBREAK()\
@@ -92,19 +93,26 @@ void selfIdentifySystem(void);
 
 void signal_callback_handler(int signum)
 {
-    printf("Interrupt signal received, closing files and shutting down");
+    printf("\n\n\n%s","Interrupt signal received, closing files and shutting down.\n\n");
+    fflush(stdout);
+
 
 #ifdef SAVE_KF_DATA
     // Close the DEBUG file to avoid corrupted data
     DEBUGFILE.close();
 #endif //SAVE_KF_DATA
 
-    // kill all pthreads
-    pthread_kill(processing_thread, SIGKILL);
-    pthread_kill(capture_thread, SIGKILL);
 
-    cout << "PROGRAM TERMINATED" << endl;
-    exit(signum);
+    // kill all pthreads
+    pthread_cancel(processing_thread);
+    pthread_cancel(capture_thread);
+    //pthread_kill(processing_thread, SIGKILL);
+    //pthread_kill(capture_thread, SIGKILL);
+
+    printf("PROGRAM TERMINATED\n");
+    fflush(stdout);
+
+    exit(0);
 }
 
 int main()
@@ -138,7 +146,11 @@ int main()
 #endif //SAVE_KF_DATA
 
     // Register signal and signal handler
-    signal(SIGINT, signal_callback_handler);
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = signal_callback_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
 
 
     // Check that serial ports were initialized
@@ -163,7 +175,8 @@ int main()
     pthread_create(&capture_thread,NULL,capture,NULL);
     pthread_create(&processing_thread,NULL,processing,NULL);
 
-    pthread_join(capture_thread,NULL); // Let the capture thread end the program
+    pthread_join(capture_thread, NULL); // Let the capture thread end the program
+    pthread_join(processing_thread, NULL);
 
     cout << "Program ended" << endl;
     return 0;

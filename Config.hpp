@@ -156,7 +156,7 @@ bool checkSanity(const vector<double> &poseState)
 // path to intrinsic camera properties
 const std::string camDataFilename =
 #if ARM
-    "/home/ubuntu/Vision/Calibration/C920-640x480_IntrinsicParams.yml";
+    "/home/ubuntu/MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
 #else
     "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
 #endif
@@ -165,7 +165,7 @@ const std::string camDataFilename =
 // path to 3-D model geometry file
 const char* modelPointsFilename =
 #if ARM
-    "/home/ubuntu/Vision/Calibration/Glider_Geom.txt";
+    "/home/ubuntu/MAIN/Calibration/Glider_Geom.txt";
 #else
     "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Penguin_Geom.txt";
 #endif
@@ -183,7 +183,7 @@ char imageSavepath[] =
 #else
     "TestImages";		// directory to save debug frames in
 #endif
-unsigned int frameSkip_ms = 1000;  // Sets how often to save an image (in milliseconds)
+unsigned int frameSkip_ms = 500;  // Sets how often to save an image (in milliseconds)
 
 
 #endif /* CONFIG_H_ */
