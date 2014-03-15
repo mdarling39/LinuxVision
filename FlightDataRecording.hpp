@@ -34,7 +34,10 @@ void setup_images_dir(const char* imageDirname,const cv::Mat &frame){
 	}
 
 	// get an RGB frame for reference
-	cv::imwrite("TestImages/frame_0.jpg", frame);
+    char filename[500];
+    strcpy(filename,imageDirname);
+    strcat(filename,"/frame_0.jpg");
+    imwrite(filename, frame);
 }
 
 
@@ -62,6 +65,37 @@ void saveDebugFrame(cv::Mat &frame, char* path)
         frameCounter++;
         last = now;
     }
+}
+
+void recordLogData(FILE* fd, std::vector<double> &filtered, std::vector<double> &unfiltered, bool &status)
+{
+    static struct timespec now, last;
+    double time;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    static bool first_exec = true;
+    if (first_exec) {
+        last = now;
+        first_exec = false;
+    }
+
+    time =  (now.tv_sec - last.tv_sec) * 1000.0;
+    time += (now.tv_nsec - last.tv_nsec) / 1000000.0;
+    time /= 1000; // convert ms to seconds
+
+    // Print time
+    fprintf(fd, "%.4f,",time);
+
+    // Print filtered state
+    fprintf(fd, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,",filtered[0],filtered[1],filtered[2],
+        filtered[3],filtered[4],filtered[5]);
+
+    // Print unfiltered state
+    fprintf(fd, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,",unfiltered[0],unfiltered[1],unfiltered[2],
+        unfiltered[3],unfiltered[4],unfiltered[5]);
+
+    // Print the status
+    fprintf(fd, "%d\n", status);
 }
 
 #endif // FLIGHTDATARECORDING_HPP_INCLUDED

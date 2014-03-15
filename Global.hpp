@@ -38,7 +38,14 @@
 #define DEBUG_STDOUT	            1		// write debug info to stdout
 #define DEBUG_VIDEO		            1       // display video debug data
 #define SAVEOFF_FRAMES		        1       // save off frames to memory
+//#define EMPLOY_KF                   1       // Kalman filter the estimated state
 //#define SAVE_KF_DATA                1       // save inputs and outputs of KF data to KF_Debug.txt
+#define LOG_VISION_DATA             1       //save off a log file
+
+// SAVE_KF_DATA may not be defined if we are not Kalman Filtering
+#ifndef EMPLOY_KF
+#undef SAVE_KF_DATA
+#endif //EMPLOY_KF
 
 #if ARM  // never try and display video on ARM system
 #undef DEBUG_VIDEO

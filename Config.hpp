@@ -27,7 +27,7 @@ const int IM_FPS = 30;
 #define BUF_SZ 4
 
 // Simulation FPS (can slow faster computers to emulate embedded computer speed)
-int simulated_fps = 20; // Slow down to the desired framerate (to run closer to embedded system)
+int simulated_fps = 30; // Slow down to the desired framerate (to run closer to embedded system)
 
 // Custom camera initialiazation function
 void custom_v4l2_init(void* parm_void)
@@ -158,7 +158,7 @@ const std::string camDataFilename =
 #if ARM
     "/home/ubuntu/MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
 #else
-    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/C920-640x480_IntrinsicParams.yml";
+    "/home/mdarling/Desktop/LinuxVision/Calibration/C920-640x480_IntrinsicParams.yml";
 #endif
 
 
@@ -167,7 +167,7 @@ const char* modelPointsFilename =
 #if ARM
     "/home/ubuntu/MAIN/Calibration/Glider_Geom.txt";
 #else
-    "/home/mdarling/Desktop/CompleteVision_MAIN/Calibration/Penguin_Geom.txt";
+    "/home/mdarling/Desktop/LinuxVision/Calibration/Penguin_Geom.txt";
 #endif
 
 
@@ -181,9 +181,15 @@ char imageSavepath[] =
 #if ARM
     "/media/ubuntu/microSD/TestImages";
 #else
-    "TestImages";		// directory to save debug frames in
+    // Be super careful with this path because it will automatically be cleared with rm -rf
+    "/home/mdarling/Desktop/LinuxVision/TestImages";		// directory to save debug frames in
 #endif
-unsigned int frameSkip_ms = 500;  // Sets how often to save an image (in milliseconds)
+
+#if ARM
+    unsigned int frameSkip_ms = 500;  // Sets how often to save an image (in milliseconds)
+#else
+    unsigned int frameSkip_ms = 500;
+#endif //ARM
 
 
 #endif /* CONFIG_H_ */

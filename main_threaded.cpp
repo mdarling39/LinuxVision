@@ -56,6 +56,7 @@ PnPObj PnP;         // Correlates LEDs w/ model points and computes UAV localiza
 FPSCounter fps(15); // Computes real-time frame rate
 ThresholdedKF::param_t KF_parms; // Kalman filter parameters
 ThresholdedKF KF;   // Thresholded Kalman filter to reject outliers
+FILE* logfd;        // file pointer to log file
 
 // POSIX compliant threads
 pthread_t capture_thread;
@@ -101,6 +102,11 @@ void signal_callback_handler(int signum)
     // Close the DEBUG file to avoid corrupted data
     DEBUGFILE.close();
 #endif //SAVE_KF_DATA
+
+#ifdef LOG_VISION_DATA
+    if (logfd != NULL) fclose(logfd);
+    fcloseall();
+#endif
 
 
     // kill all pthreads
@@ -223,6 +229,13 @@ void *capture(void*)
     setup_images_dir(imageSavepath,frame);
     cout << "   images directory created" << endl;
 #endif /*SAVEOFF_FRAMES*/
+
+#ifdef LOG_VISION_DATA
+    char logfilepath[500];
+    strcpy(logfilepath,imageSavepath);
+    strcat(logfilepath,"/visionLog.txt");
+    logfd = fopen(logfilepath,"w");
+#endif //LOG_VISION_DATA
     PRINT_LINEBREAK();
 
 
@@ -305,10 +318,16 @@ while(1)
 #endif //SAVE_KF_DATA
 
 
+#ifdef EMPLOY_KF
     // Employ Kalman filter
     KF.predict(reportState.data());
     KF.correct();  // KF.correct() returns TRUE if not an outlier, FALSE if an outlier
     KF.get_state(reportState.data()); // Return the ESTIMATED state
+#endif //EMPLOY_KF
+
+#ifdef LOG_VISION_DATA
+    recordLogData(logfd,reportState,poseState,PnP.is_current);
+#endif //LOG_VISION_DATA
 
 #ifdef SAVE_KF_DATA
     // DEBUG: save output from Kalman filter
@@ -321,8 +340,6 @@ while(1)
 #if ARM
         Serial.writeData(reportState);
 #endif
-
-
 
 
 

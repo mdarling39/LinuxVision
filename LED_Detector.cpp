@@ -81,9 +81,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
         contourStruct.area = CV_PI * (contourStruct.radius * contourStruct.radius);
 
         /// Uncomment to view all detected blobs
-#if (!ARM)
+//#if (!ARM)
         cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 3);
-#endif
+//#endif
         /// Consider only the points that fall within a ROI around the last known position
         if (havePreviousState)
         {
