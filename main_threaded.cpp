@@ -326,7 +326,7 @@ while(1)
 #endif //EMPLOY_KF
 
 #ifdef LOG_VISION_DATA
-    recordLogData(logfd,reportState,poseState,PnP.is_current);
+    recordLogData(logfd,reportState,poseState,poseErr,PnP.is_current);
 #endif //LOG_VISION_DATA
 
 #ifdef SAVE_KF_DATA

@@ -67,7 +67,7 @@ void saveDebugFrame(cv::Mat &frame, char* path)
     }
 }
 
-void recordLogData(FILE* fd, std::vector<double> &filtered, std::vector<double> &unfiltered, bool &status)
+void recordLogData(FILE* fd, std::vector<double> &filtered, std::vector<double> &unfiltered, double reprojErr, bool &status)
 {
     static struct timespec now, last;
     double time;
@@ -93,6 +93,9 @@ void recordLogData(FILE* fd, std::vector<double> &filtered, std::vector<double> 
     // Print unfiltered state
     fprintf(fd, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,",unfiltered[0],unfiltered[1],unfiltered[2],
         unfiltered[3],unfiltered[4],unfiltered[5]);
+
+    // Print the reprojection error
+    fprintf(fd, "%.6f",reprojErr);
 
     // Print the status
     fprintf(fd, "%d\n", status);
