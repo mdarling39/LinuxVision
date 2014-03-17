@@ -165,7 +165,7 @@ const std::string camDataFilename =
 // path to 3-D model geometry file
 const char* modelPointsFilename =
 #if ARM
-    "/home/ubuntu/MAIN/Calibration/Glider_Geom.txt";
+    "/home/ubuntu/MAIN/Calibration/Penguin_Geom.txt";
 #else
     "/home/mdarling/Desktop/LinuxVision/Calibration/Penguin_Geom.txt";
 #endif

@@ -80,9 +80,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
         minEnclosingCircle(contours[contourIdx], contourStruct.center, contourStruct.radius);
         contourStruct.area = CV_PI * (contourStruct.radius * contourStruct.radius);
 
-        /// Uncomment to view all detected blobs
+        /// Uncomment to view ALL detected blobs
 //#if (!ARM)
-        cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 3);
+        //cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 3);
 //#endif
         /// Consider only the points that fall within a ROI around the last known position
         if (havePreviousState)
@@ -91,9 +91,9 @@ bool LED_Detector::findLEDs(const cv::Mat& RGBImage, cv::Mat &grayImage, cv::Mat
             if (pointPolygonTest(leaderROI_contour,contourStruct.center,false) < 0 )
                 continue;
             /// Uncomment to show/highlight blobs that appear inside ROI
-#if (!ARM)
+//#if (!ARM)
             cv::circle(frame,contourStruct.center, 6, cv::Scalar(255,255,255), 2);
-#endif
+//#endif
         }
 
         if (params.filterByArea)
