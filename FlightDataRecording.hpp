@@ -95,7 +95,7 @@ void recordLogData(FILE* fd, std::vector<double> &filtered, std::vector<double> 
         unfiltered[3],unfiltered[4],unfiltered[5]);
 
     // Print the reprojection error
-    fprintf(fd, "%.6f",reprojErr);
+    fprintf(fd, "%.6f,",reprojErr);
 
     // Print the status
     fprintf(fd, "%d\n", status);
